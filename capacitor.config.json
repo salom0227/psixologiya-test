@@ -1,0 +1,19 @@
+{
+  "appId": "uz.testbase.psixologiya",
+  "appName": "TestBase",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "android": {
+    "minWebViewVersion": 60,
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "backgroundColor": "#0a0e1a",
+      "showSpinner": false
+    }
+  }
+}

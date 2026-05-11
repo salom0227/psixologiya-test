@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Psixologiya Test Bazasi</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0e1a">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d4a;
+    --accent: #3b82f6;
+    --accent2: #60a5fa;
+    --gold: #f59e0b;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --green: #10b981;
+    --red: #ef4444;
+    --radius: 12px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  body {
+    font-family: 'Noto Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* SCREENSHOT PROTECTION - STRONG */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+    background: 
+      repeating-linear-gradient(
+        47deg,
+        transparent,
+        transparent 22px,
+        rgba(180,160,100,0.045) 22px,
+        rgba(180,160,100,0.045) 23px
+      ),
+      repeating-linear-gradient(
+        -47deg,
+        transparent,
+        transparent 22px,
+        rgba(100,130,200,0.035) 22px,
+        rgba(100,130,200,0.035) 23px
+      );
+  }
+
+  /* Watermark overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9997;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Ctext x='10' y='60' font-size='13' fill='rgba(245,158,11,0.06)' transform='rotate(-35,100,100)' font-family='sans-serif'%3ETestBase%3C/text%3E%3Ctext x='30' y='130' font-size='11' fill='rgba(59,130,246,0.05)' transform='rotate(-35,100,100)' font-family='sans-serif'%3EPsixologiya%3C/text%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  @media print {
+    body { display: none !important; }
+  }
+
+  /* ---- PIN SCREEN ---- */
+  #pin-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #0a0e1a 0%, #0f172a 50%, #0a1628 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    gap: 0;
+  }
+
+  .pin-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--gold);
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+
+  .pin-sub {
+    font-size: 0.8rem;
+    color: var(--text2);
+    margin-bottom: 40px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
+  .pin-dots {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .pin-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    background: transparent;
+    transition: all 0.2s;
+  }
+
+  .pin-dot.filled {
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+
+  .pin-dot.error {
+    border-color: var(--red);
+    background: var(--red);
+    animation: shake 0.4s ease;
+  }
+
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)}
+    60%{transform:translateX(-6px)}
+    80%{transform:translateX(6px)}
+  }
+
+  .pin-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 280px;
+  }
+
+  .pin-key {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 1.4rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Noto Sans', sans-serif;
+  }
+
+  .pin-key:active { transform: scale(0.88); background: var(--accent); }
+
+  .pin-key.del {
+    font-size: 1rem;
+    color: var(--text2);
+  }
+
+  .pin-key.empty { background: transparent; border: none; cursor: default; }
+
+  .pin-error-msg {
+    margin-top: 20px;
+    color: var(--red);
+    font-size: 0.85rem;
+    height: 20px;
+    text-align: center;
+  }
+
+  /* ---- MAIN APP ---- */
+  #app {
+    display: none;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,14,26,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .app-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+
+  .stats-badge {
+    font-size: 0.7rem;
+    color: var(--text2);
+    background: var(--surface2);
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+
+  /* SEARCH */
+  .search-wrap {
+    position: relative;
+  }
+
+  .search-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 40px 10px 16px;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: 'Noto Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text2); }
+
+  .search-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text2);
+    pointer-events: none;
+    font-size: 1rem;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    padding: 10px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,14,26,0.9);
+    position: sticky;
+    top: 96px;
+    z-index: 99;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: 'Noto Sans', sans-serif;
+  }
+
+  .tab-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    font-weight: 600;
+  }
+
+  /* CONTENT */
+  .content {
+    padding: 12px 16px;
+    flex: 1;
+  }
+
+  .search-result-count {
+    font-size: 0.75rem;
+    color: var(--text2);
+    margin-bottom: 10px;
+    padding-left: 4px;
+  }
+
+  /* QA CARD */
+  .qa-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.15s;
+    cursor: pointer;
+  }
+
+  .qa-card:active { transform: scale(0.99); }
+
+  .qa-card.expanded { border-color: var(--accent); }
+
+  .qa-question {
+    padding: 14px 16px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    font-weight: 500;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .qa-num {
+    font-size: 0.7rem;
+    color: var(--accent);
+    background: rgba(59,130,246,0.12);
+    padding: 2px 7px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-weight: 600;
+  }
+
+  .qa-q-text { flex: 1; }
+
+  .qa-arrow {
+    flex-shrink: 0;
+    color: var(--text2);
+    font-size: 0.7rem;
+    margin-top: 3px;
+    transition: transform 0.2s;
+  }
+
+  .qa-card.expanded .qa-arrow { transform: rotate(180deg); }
+
+  .qa-answer {
+    display: none;
+    padding: 0 16px 14px 16px;
+    padding-left: 40px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--text2);
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    background: rgba(59,130,246,0.04);
+  }
+
+  .qa-card.expanded .qa-answer { display: block; }
+
+  .answer-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--green);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .highlight {
+    background: rgba(245,158,11,0.25);
+    color: var(--gold);
+    border-radius: 3px;
+    padding: 0 2px;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text2);
+  }
+
+  .no-results-icon { font-size: 3rem; margin-bottom: 12px; }
+  .no-results-text { font-size: 0.9rem; }
+
+  /* CATEGORY HEADER */
+  .cat-header {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    font-weight: 700;
+    padding: 6px 4px;
+    margin-top: 4px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* FLOATING BACK-TO-TOP */
+  .fab {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(59,130,246,0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    transition: opacity 0.3s;
+  }
+  .fab.show { display: flex; }
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <div class="pin-logo">📚 TestBase</div>
+  <div class="pin-sub">Psixologiya & Falsafa</div>
+
+  <div class="pin-dots" id="pinDots">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+    <div class="pin-dot" id="d4"></div>
+    <div class="pin-dot" id="d5"></div>
+  </div>
+
+  <div class="pin-keypad">
+    <button class="pin-key" onclick="pinPress('1')">1</button>
+    <button class="pin-key" onclick="pinPress('2')">2</button>
+    <button class="pin-key" onclick="pinPress('3')">3</button>
+    <button class="pin-key" onclick="pinPress('4')">4</button>
+    <button class="pin-key" onclick="pinPress('5')">5</button>
+    <button class="pin-key" onclick="pinPress('6')">6</button>
+    <button class="pin-key" onclick="pinPress('7')">7</button>
+    <button class="pin-key" onclick="pinPress('8')">8</button>
+    <button class="pin-key" onclick="pinPress('9')">9</button>
+    <button class="pin-key empty"></button>
+    <button class="pin-key" onclick="pinPress('0')">0</button>
+    <button class="pin-key del" onclick="pinDel()">⌫</button>
+  </div>
+  <div class="pin-error-msg" id="pinError"></div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div class="app-title">📚 TestBase</div>
+      <div class="stats-badge" id="statsLabel">0 ta savol</div>
+    </div>
+    <div class="search-wrap">
+      <input class="search-input" type="text" id="searchInput" placeholder="Savol yoki javobdan qidiring..." oninput="doSearch()" autocomplete="off" spellcheck="false">
+      <span class="search-icon">🔍</span>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabsBar">
+    <button class="tab-btn active" onclick="selectTab(-1, this)">Hammasi</button>
+    <button class="tab-btn" onclick="selectTab(0, this)">Eksperimental</button>
+    <button class="tab-btn" onclick="selectTab(1, this)">Rivojlanish & Differensial</button>
+    <button class="tab-btn" onclick="selectTab(2, this)">Umumiy Psixologiya</button>
+    <button class="tab-btn" onclick="selectTab(3, this)">Psixodiagnostika</button>
+    <button class="tab-btn" onclick="selectTab(4, this)">Falsafa</button>
+  </div>
+
+  <div class="content">
+    <div class="search-result-count" id="resultCount"></div>
+    <div id="qaList"></div>
+  </div>
+</div>
+
+<button class="fab" id="fabBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+// ==================== PIN ====================
+const PIN = '111111';
+let pinInput = '';
+
+function pinPress(d) {
+  if (pinInput.length >= 6) return;
+  pinInput += d;
+  updateDots();
+  if (pinInput.length === 6) {
+    setTimeout(checkPin, 120);
+  }
+}
+
+function pinDel() {
+  if (pinInput.length === 0) return;
+  pinInput = pinInput.slice(0, -1);
+  updateDots();
+}
+
+function updateDots() {
+  for (let i = 0; i < 6; i++) {
+    const d = document.getElementById('d' + i);
+    d.className = 'pin-dot' + (i < pinInput.length ? ' filled' : '');
+  }
+}
+
+function checkPin() {
+  if (pinInput === PIN) {
+    document.getElementById('pin-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    renderAll();
+  } else {
+    for (let i = 0; i < 6; i++) {
+      document.getElementById('d' + i).className = 'pin-dot error';
+    }
+    document.getElementById('pinError').textContent = 'Noto\'g\'ri kod! Qayta urinib ko\'ring.';
+    setTimeout(() => {
+      pinInput = '';
+      updateDots();
+      document.getElementById('pinError').textContent = '';
+    }, 1000);
+  }
+}
+
+// Keyboard support for PIN
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('pin-screen').style.display !== 'none') {
+    if (/^[0-9]$/.test(e.key)) pinPress(e.key);
+    if (e.key === 'Backspace') pinDel();
+  }
+});
+
+// ==================== DATA ====================
+const categories = [
+  'Eksperimental Psixologiya',
+  'Rivojlanish & Differensial Psixologiya',
+  'Umumiy Psixologiya',
+  'Psixodiagnostika',
+  'Falsafa'
+];
+
+const rawData = [
+  // ===== CAT 0: EKSPERIMENTAL =====
+  [0,'1887-yilda Pensilvaniyada laboratoriya ochgan olim?','Kettel'],
+  [0,'1890 yilda nashr qilingan ilmiy ishida Dj.Kettel necha turdagi laboratoriya testlarini ro\'yxatini keltiradi?','50'],
+  [0,'1892-yilda Oddesada idrok va xotira muammolari bo\'yicha laboratoriya ochgan olim?','N.N.Lange'],
+  [0,'A.A.Ershov tomonidan kuzatishning nechta va qanday kamchiliklari ajratib berildi?','6 ta: Galo effekt, voqea hodisaga doimo ijobiy baho berish tendentsiyasi, markaziy tendentsiya xatoligi, korreleltsiya xatosi, kontrast xatolik, birinchi taassurot xatoligi'],
+  [0,'Amerika psixologlar assotsiyasi (APA) qachon tuzilgan?','1892'],
+  [0,'Antropologik laboratoriya dastlab kim tomonidan ochilgan?','F.Galton'],
+  [0,'Aqliy qobiliyat yo\'nalishlarini aniqlash metodikasi muallifi kim?','Ayzenk'],
+  [0,'AQSHda 1-eksperimental laboratoriya qachon va kim tomonidan tashkil etilgan?','1883, S.Xoll'],
+  [0,'B.G.Ananev tomonidan metodlar klassifikatsiyasi necha bosqichga bo\'linadi?','4'],
+  [0,'Birinchi bor tashkil qilingan laboratoriyalarda qanday psixologik xususiyatlar o\'rganilgan?','Sezgi, idrok, reaksiya tezligi'],
+  [0,'Birinchi psixologik laboratoriya qaysi shaharda tashkil etilgan?','Leypsig'],
+  [0,'Dastlabki eksperimental psixologiya laboratoriyasida tadqiqolar qachondan boshlab o\'tkazilgan?','XIX-asr o\'rtalari'],
+  [0,'Dastlabki psixologiya laboratoriyalari qanday nomlanadi?','Psixologik-fiziologik laboratoriya'],
+  [0,'Dastlabki yillarda eksperimental laboratoriyalarning ochilish davrlari xronologiyasi?','1879 Germaniya, 1883 AQSH, 1886 Rossiya, 1887 Angliya, 1889 Fransiya'],
+  [0,'Eksperimental psixologiya fanining maqsadi?','Eksperiment o\'tkazishning malaka va ko\'nikmalarini shakllantirish'],
+  [0,'EKSPERIMENT MA\'NOSI?','Psixologik hodisalarning faol namoyon bo\'lishini ta\'minlaydigan maxsus yaratilgan sharoitlarda ma\'lumot to\'plash usuli'],
+  [0,'Eksperimental tadqiqotni rejalashtirish nechchi bosqichdan iborat?','2'],
+  [0,'Eksperimental psixologiya fan sifatida qachon shakllana boshladi?','XIX asr o\'rtalari'],
+  [0,'Eksperimental psixologiya fani nimani o\'rganadi?','Nazariy manbani amaliyotda qo\'llash'],
+  [0,'Eksperimental psixologiya psixologiya fanining qaysi sohasiga kiradi?','Umumiy psixologiya'],
+  [0,'Eksperimental psixologiyada D.Veksler 1939, 1955 larda qanday testlarni qo\'llagan?','Subtestlar'],
+  [0,'Eksperimental psixologiyaning asosiy metodlari qaysilar?','Kuzatish, eksperiment'],
+  [0,'Eksperimental psixologiyaning yordamchi metodlari qaysilar?','Suhbat, test'],
+  [0,'Empirik metodlarni qo\'llashning nechta darajasini ajratish mumkin?','5'],
+  [0,'Empirik metodlarni qo\'llashning darajalarini aniqlang','Metodika darajasi, metodik qo\'llanma darajasi, metod darajasi, tekshirishni tashkil qilish darajasi, metodologik yondashish darajasi'],
+  [0,'F.Galton va Dj.Kettelning dastlabki asarlari nashr etilgach qaysi metod turli mamlakat olimlarining diqqatini o\'ziga tortdi?','Test'],
+  [0,'Faoliyat mahsulini tahlil qilish metodi bu?','Praksimetrik metod'],
+  [0,'Faqat laboratoriya eksperimentini o\'z ichiga oluvchi faraz qaysi?','Kontr eksperimental faraz'],
+  [0,'Galo effekt nima?','Kuzatuvchining umumlashgan taassuroti xulq-atvorning ko\'p idrok qilinishiga, nozik tafovutlarni qabul qilmaslikka olib keladi'],
+  [0,'Gipoteza bu?','Ilmiy faraz'],
+  [0,'Gottsdanker eksperimental farazlarni nechta turga ajratgan?','5'],
+  [0,'Hujjatlarni tahlil qilish metodi qaysi?','Arxiv'],
+  [0,'Isbotlangan farazlarni nechta turga ajratish mumkin?','3'],
+  [0,'Kuzatish metodini shaklini belgilang?','Yakka va guruh'],
+  [0,'Laboratoriya eksperimenti va tabiiy eksperiment qaysi olim tomonidan taklif etilgan?','A.F.Lazurskiy'],
+  [0,'M.G.Davletshin nechanchi yillarda Nizomiy nomidagi TDPU Umumiy psixologiya kafedrasiga mudirlik qilgan?','1968-2005'],
+  [0,'Metod so\'zining ma\'nosi nima?','Yunoncha: tabiat hodisalarini tekshirish usuli'],
+  [0,'Metodikaning ishonchliligi nima?','Metodika yordamida barqaror, qat\'iy ko\'rsatkichlarni olish imkoniyati'],
+  [0,'Modellashtirishning nechta turi mavjud?','2: Strukturali-funktsionalli, funktsional-strukturali'],
+  [0,'Mustaqil o\'zgaruvchi bu?','Eksperimentda qaram o\'zgaruvchiga ta\'sirini aniqlash uchun eksperimentator tomonidan boshqariladigan o\'zgaruvchi'],
+  [0,'N.Xoll metodikasi?','Emotsional intellekt'],
+  [0,'Nechanchi yilda "Amerika psixologiyasi" jurnali chop etildi?','1877'],
+  [0,'Noeksperimental metod afzalliklari?','Tadqiqotni tabiiy sharoitda o\'tkazish imkonini beradi'],
+  [0,'Noeksperimental metod cheklovlari?','Natijalar sababini aniqlash va natijalarni umumlashtirish qiyinligi'],
+  [0,'Noeksperimental metodlar?','Kuzatish, testlashtirish, suhbat yoki intervyu, anketa'],
+  [0,'Nutq, tafakkur, iroda kabi bilish jarayonlarini tajriba orqali o\'rganish mumkin emas deb ta\'riflagan olim?','V. Vundt'],
+  [0,'Observatsiya bu?','Shaxslarning xatti-harakatlarini va o\'zaro munosabatlarini kuzatish orqali ma\'lumot to\'plash'],
+  [0,'Observatsiya metodi nechchi turga bo\'linadi?','2: bevosita va bilvosita'],
+  [0,'Obyektiv kuzatish metodi nima?','Tashqi kuzatish'],
+  [0,'O\'zbekistonda 1-eksperimental laboratoriya qachon va kim tomonidan tashkil etilgan?','1927, Ivanov'],
+  [0,'PARADIGMA MA\'NOSI?','Yunoncha - namuna, andoza'],
+  [0,'Proyektiv atamasi ilk bor kim tomonidan va qachon qo\'llanilgan?','Lourens Fenk, 1939 yil'],
+  [0,'Proyektiv metodikaga misol?','Avtoportret, Geometrik figuralar yordamida odam rasmini chizish'],
+  [0,'Psixologik eksperiment bu?','Tadqiqotchining sub\'ekt hayotiga maqsadli aralashuvi orqali maxsus sharoitlarda o\'tkaziladigan tajriba'],
+  [0,'Psixologik tadqiqotda qo\'llaniladigan usullarning darajali bo\'lishini qaysi olim taklif etgan?','G.D.Pirov'],
+  [0,'Psixologik tadqiqotlar necha bosqichdan iborat?','4'],
+  [0,'Psixologik tekshirishning nazariy metodlari?','Deduktiv, induktiv, modellashtirish'],
+  [0,'Psixologiyada eksperiment usuli qachondan foydalana boshlangan?','XIX asr oxiri XX asr boshlari'],
+  [0,'Psixologiyada eksperimentni tadbiq qilish bo\'yicha dastlabki ishlarni kimlar amalga oshirgan?','Veber va Fexner'],
+  [0,'Psixologiyada shkalalashtirish deganda nima tushuniladi?','Eksperimental va matematik usullar yig\'indisi'],
+  [0,'PSIXOMETRIYA NIMA?','Psixologiyaning psixologik o\'lchov muammolari bilan shug\'ullanadigan bo\'limi (yunoncha: psyche - ruh, metro - o\'lchash)'],
+  [0,'PSIXOMETRIYA tushunchasini kim kiritdi?','X.Volf'],
+  [0,'Qo\'l testi kim tomonidan va nechanchi yilda ishlab chiqilgan?','1962 yilda Edvin E.Vagner tomonidan'],
+  [0,'Qozonda Bexterov tomonidan birinchi psixologik laboratoriya qachon ochilgan?','1886'],
+  [0,'Rorshax dog\'i metodikasi insonni qaysi jihatlarini o\'rganadi?','Inson psixikasi va uning buzilishlarini o\'rganadi'],
+  [0,'Rossiyada 1-eksperimental laboratoriya qachon, qayerda va kim tomonidan tashkil etilgan?','1886-yil, Bexterev tomonidan Qozonda'],
+  [0,'Rossiyada eksperimental psixologiyaning otasi?','Sechenov'],
+  [0,'Rossiyada psixologiya institutiga qachon asos solingan?','1912'],
+  [0,'Rossiyadagi birinchi psixologiya instituti kim tomonidan ochilgan?','Chelpanov'],
+  [0,'Rozenzveyg metodikasi nima uchun mo\'ljallangan?','Qobiliyatsizlikka reaktsiyalarni o\'rganish uchun. 1945 yilda Saul Rosenzweig tomonidan ishlab chiqilgan'],
+  [0,'S.L.Rubinshteyn eksperimental psixologiyada asosiy metod?','Kuzatish, eksperiment'],
+  [0,'Tadqiqot bayonnomasi kim tomonidan to\'ldiriladi?','Tekshiruvchi'],
+  [0,'Tajribaning tashqi sharoitlariga nimalar kiradi?','Yoritilganlik, sukunat, harorat, ventilyatsiya'],
+  [0,'Tashkiliy metodlarga B.G.Anan\'ev qaysi metodlarni kiritgan?','Qiyosiy, longutyud va kompleks'],
+  [0,'Test metodi qo\'llash tarafdorlari?','A.Bine'],
+  [0,'Tomas-Kliman so\'rovnomasi nimani aniqlashga xizmat qiladi?','Nizoli vaziyatlarda xulq-atvor stilini'],
+  [0,'Toshkentda nechanchi yilda pedagogik va psixologik fikrlar markazi tashkil qilingan?','1918'],
+  [0,'V.Vundt 1880-1881 yillarda nashr etilgan asari qanday nomlanadi?','"Fiziologik psixologiya asoslari"'],
+  [0,'V.Vund laboratoriyada qo\'llagan dastlabki usul?','Kuzatish'],
+  [0,'V.Vund tomonidan 1-eksperimental psixologik laboratoriya qachon tashkil qilingan?','1879'],
+  [0,'V.Vundt tomonidan yaratilgan psixologik asbob-uskunalarni ishlab chiqaruvchi firmaning nomi?','Simmerman'],
+  [0,'Validlik so\'zining lug\'aviy ma\'nosi?','To\'laqonli yaroqli, mos'],
+  [0,'Vundt mayatnigi nechanchi yilda yaratilgan?','1861'],
+  [0,'XIX asr oxiriga kelib Amerikada nechta laboratoriya va psixologlar mahkamalari faoliyat yuritgan?','27'],
+  [0,'Fokus guruhlar deb qanday guruhlarga aytiladi?','Muayyan mavzuda bir necha odam bilan muhokama olib borish orqali ularning fikrini o\'rganish guruhi'],
+  [0,'Validlikning empirik turi qanday amalga oshiriladi?','Sinaluvchining reaktsiyasi va xatti-harakatini kuzatish orqali, uning haqqoniy xulqidagi diagnostik ko\'rsatkichlarning bir-biriga mosligi bilan tekshiriladi'],
+  [0,'Shaxsning aqliy taraqqiyotini, qobiliyatini, irodaviy sifatlarini tekshirishda qo\'llaniladigan qisqa standart masalalar?','Test'],
+  [0,'Frustratsiya nima?','Shaxsning ehtiyojlarini qondirish jarayonida imkoniyatlarini ro\'yobga chiqara olmasligi'],
+  [0,'Kontekstual metod nima?','So\'zlar yoki iboralarning ma\'nolarini aniqlashga yordam beradi'],
+  [0,'Noeksperimental metod afzalliklari?','Tadqiqotni tabiiy sharoitda o\'tkazish imkonini beradi'],
+  [0,'Noeksperimental metod cheklovlari?','Natijalar sababini aniqlash va natijalarni umumlashtirish qiyinligi'],
+  [0,'Noeksperimental metodlar qaysilar?','Kuzatish, testlashtirish, suhbat yoki intervyu, anketa'],
+  [0,'Faqatgina juda ko\'plab eksperimentlar natijalari asosida isbotlanadigan faraz turi?','Eksperimental maksimal ko\'rsatkichli faraz'],
+  [0,'Ko\'p xarakterli eksperimentlarda o\'tkaziladigan faraz qaysi?','Absolyut eksperimental farazlar'],
+  [0,'Isbotlangan farazlarni nechta turga ajratish mumkin?','3'],
+  [0,'Kuzatish metodini amalga oshirishdagi dastlabki bosqich?','Kuzatishning maqsadini belgilash'],
+  [0,'Kuzatish metodining shaklini belgilang?','Yakka va guruh'],
+  [0,'Observatsiya bu?','Shaxslarning xatti-harakatlarini va o\'zaro munosabatlarini kuzatish orqali ma\'lumot to\'plash'],
+  [0,'Observatsiya metodi nechchi turga bo\'linadi?','Bevosita va bilvosita'],
+  [0,'Obyektiv kuzatish metodi qanday kuzatish degan ma\'noni bildiradi?','Tashqi kuzatish'],
+  [0,'Hujjatlarni tahlil qilish metodi qaysi?','Arxiv metodi'],
+  [0,'Kuzatuv metodining xilma-xilligi (standartlashuvi)?','Standartlashtirilgan'],
+  [0,'Tomas-Kliman so\'rovnomasi nimani aniqlashga xizmat qiladi?','Nizoli vaziyatlarda xulq-atvor stilini'],
+  [0,'Rozenzveyg metodikasi nima uchun mo\'ljallangan va kim tomonidan ishlab chiqilgan?','Qobiliyatsizlikka reaktsiyalarni va faoliyatga to\'sqinlik qiladigan vaziyatlarni o\'rganish; 1945 yilda Saul Rosenzweig tomonidan'],
+  [0,'Proyektiv so\'zi lotincha "projectio" so\'zidan olingan bo\'lib qanday ma\'noni bildiradi?','"Oldinga tashlash"'],
+  [0,'Proyektiv atamasi ilk bor kim tomonidan va qachon qo\'llanilgan?','Lourens Fenk, 1939 yil'],
+  [0,'Qo\'l testi kim tomonidan va nechanchi yilda ishlab chiqilgan?','1962 yilda Edvin E. Vagner tomonidan'],
+  [0,'Rorshax dog\'i metodikasi insonni qaysi jihatlarini o\'rganadi?','Inson psixikasi va uning buzilishlarini o\'rganadi'],
+  [0,'Toshkentda nechanchi yilda pedagogik va psixologik fikrlar markazi tashkil qilingan?','1918'],
+  [0,'M.G.Davletshin nechanchi yillarda Nizomiy nomidagi TDPU Umumiy psixologiya kafedrasiga mudirlik qilgan?','1968-2005'],
+  [0,'O\'zbekistonda 1-eksperimental laboratoriya qachon va kim tomonidan tashkil etilgan?','1927, Ivanov'],
+  [0,'Tadqiqot bayonnomasi kim tomonidan to\'ldiriladi?','Tekshiruvchi'],
+  [0,'Tajriba jarayonida tekshiriluvchi munosabatda bo\'ladigan ta\'sirlar qanday nomlanadi?','Bog\'langan va bog\'lanmagan o\'zgaruvchi'],
+  [0,'Tajribaning tashqi sharoitlariga nimalar kiradi?','Yoritilganlik, sukunat, harorat, ventilyatsiya'],
+  [0,'Tashkiliy metodlarga B.G.Anan\'ev qaysi metodlarni kiritgan?','Qiyosiy, longityud va kompleks'],
+  [0,'Psixologik tadqiqotning qaysi bosqichida tekshiriluvchi uchun ko\'rsatma ishlab chiqiladi?','Tayyorgarlik ko\'rish bosqichi'],
+  [0,'PARADIGMA MA\'NOSI?','Yunoncha - namuna, andoza'],
+  [0,'Modellashtirishning nechta turi mavjud?','Strukturali-funktsionalli, funktsional-strukturali'],
+
+  // ===== CAT 1: RIVOJLANISH & DIFFERENSIAL =====
+  [1,'Differensial psixologiya qachon sokin rivojlanish fazasiga erishadi - bu fikr kimga tegishli?','Uilyam Stern'],
+  [1,'3 yosh krizisi (inqirozi) qanday xatti-harakatlarda ifodalanadi?','Bola o\'zini kattalar bilan taqqoslay boshlashi, kattalar xatti-harakatlarini bajarishga intilishi, mustaqil harakat qila olishi, qat\'iyligi va qaysarligida ifodalanadi'],
+  [1,'Akseleratsiya terminining ma\'nosi nima?','Tezlatish'],
+  [1,'B.Elkoninning etakchi faoliyat nazariyasiga ko\'ra "odam-buyum" munosabat tizimi qaysi yosh davrlari uchun xos?','Ilk bolalik, kichik maktab yoshi, o\'spirinlik'],
+  [1,'B.G.Ananyev psixologiya metodlarini qanday guruhlarga bo\'lgan?','Tashkiliy, empirik, ma\'lumotlarni qayta ishlash, sharhlash metodlari'],
+  [1,'Biogenetik va sotsiogenetik nazariyalar qanday mezonlar bilan farqlanadi?','Inson taraqqiyotida tabiatning roli'],
+  [1,'Bola psixikasini o\'rganishda tadqiqotchi qanday tamoyillarga tayanishi lozim?','Obyektivlik, sababiylik, sinchkovlik va muntazamlik'],
+  [1,'Bola shaxsi shakllanishida qaysi omillar yetakchi rol o\'ynaydi?','Ijtimoiy omillar'],
+  [1,'Bola to\'g\'ri yurishni, muloqotga kirishishni, predmetli faoliyatni qaysi davrda egallaydi?','Ilk bolalik davrida'],
+  [1,'Bolada o\'zini-o\'zi boshqarishning dastlabki elementlari taxminan qachondan shakllana boshlaydi?','2 yosh'],
+  [1,'Bolalar psixologiyasida kuzatish metodi turlari?','Obyektiv, subyektiv'],
+  [1,'Chaqaloqlik qaysi davrlarni o\'z ichiga oladi?','Tug\'ilganidan boshlab bir-ikki oylikkacha'],
+  [1,'Differensial diagnostika nima?','Shaxslar o\'rtasidagi individual farqlarni aniqlash usuli'],
+  [1,'Differensial diagnostika orqali nimalar aniqlanadi?','Insonning temperament turi, qobiliyati va intellekt darajasi'],
+  [1,'Differensial psixologiya nimani o\'rganadi?','Insonlar o\'rtasidagi individual farqlarni'],
+  [1,'Differensial psixologiya qaysi fan bilan eng yaqin aloqada?','Pedagogik psixologiya'],
+  [1,'Differensial psixologiya so\'zi qaysi tildan olingan?','Lotin tilidan'],
+  [1,'Differensial psixologiyada "individual farq" atamasi nimani anglatadi?','Har bir insonning o\'ziga xos psixik xususiyatlarini'],
+  [1,'Differensial psixologiyada temperament qaysi olim bilan bog\'liq?','Gippokrat'],
+  [1,'Differensial psixologiyaning amaliy yo\'nalishi nimani o\'z ichiga oladi?','Kasb tanlash, ta\'limni individuallashtirish, psixodiagnostika'],
+  [1,'Differensial psixologiyaning asoschisi kim?','Uilyam Stern'],
+  [1,'Differensial psixologiyaning sinonimi?','Individual farqlar psixologiyasi'],
+  [1,'Ekstraversiya qanday shaxs turini bildiradi?','Tashqi muhitga, odamlar bilan muloqotga yo\'naltirilgan insonni'],
+  [1,'Empatiya nima?','Boshqa odamning g\'amu-tashvishlariga, quvonchiga sheriklik hissi'],
+  [1,'"Endi u bola emas-u, hali katta ham emas" - bu qaysi yosh davri?','O\'smirlik davri'],
+  [1,'Giperaktivlik nima?','Haddan tashqari g\'ayriodddiy faoliyat bo\'lib, bola xatti-harakatining buzilishi'],
+  [1,'Go\'daklik qaysi davrni o\'z ichiga oladi?','Bir-ikki oylikdan bir yoshgacha'],
+  [1,'Harakatchan, chaqqon, tezda tushunadigan, lekin jaxldor so\'zlari qaysi mijozga taalluqli?','Xolerik'],
+  [1,'Himoya mexanizmi atamasi kim tomonidan fanga kiritildi?','1894-yilda Z.Freyd'],
+  [1,'Ikki yoshga etgan bolaning faol so\'zlardan iborat lug\'at boyligi?','200-300 ta so\'z'],
+  [1,'Ilk bolalik davri necha yoshlarni o\'z ichiga oladi?','1-3 yosh'],
+  [1,'Ilk o\'spirinlik davri qanday ta\'riflanadi?','"Kamolot bo\'sag\'asi"'],
+  [1,'Individual farqlar deganda nima tushuniladi?','Insonlar o\'rtasidagi psixik va xulqiy tafovutlar'],
+  [1,'Inson shaxsi Z.Freyd ta\'rifi bo\'yicha qanday tuzilmaviy tarkibga ega?','U (Id), Men (Ego), Oliy Men (Super Ego)'],
+  [1,'Intellekt nimalarni o\'z ichiga oladi?','Fikr yuritish, tushunish, muammolarni hal etish qobiliyatini'],
+  [1,'Keksalik davrini o\'rganadigan psixologiya sohasini belgilang?','Gerontopsixologiya'],
+  [1,'Kichik maktab yoshi davri necha yoshlarni o\'z ichiga oladi?','7-11 yosh'],
+  [1,'Kichik maktab yoshida yuzaga keladigan yangi psixologik tuzilma?','Intellektual refleksiya'],
+  [1,'Konformizm bu?','Individning guruh bilan tashqi roziligi, aslida esa ichki noroziligi'],
+  [1,'Maktabgacha yosh davri necha yoshni o\'z ichiga oladi?','3-7 yosh'],
+  [1,'Maktabgacha yosh davrida bola shaxsida ro\'y beruvchi eng muhim o\'zgarish?','Motivlarni bir-biriga bo\'ysundira olish qobiliyatining shakllanishi'],
+  [1,'Maktabgacha yoshdagi bolalarning yetakchi faoliyati nima?','O\'yin'],
+  [1,'O\'smirlik davrida etakchi faoliyat sifatida gavdalanadigan faoliyat turi?','Intim-shaxsiy muloqot'],
+  [1,'O\'smirlik davrining qanday avtonomiyalari mavjud?','Huquqiy, emotsional, makoniy'],
+  [1,'O\'spirinlik davri qanday psixologik xususiyatlari bilan farq qiladi?','Jismoniy hamda aqliy jihatdan voyaga yetadi, kamolotga erishadi, dunyoqarashi tarkib topgan bo\'ladi'],
+  [1,'Ontogenez bu?','Har bir individning hayot davomida tug\'ilishidan tortib to\'lg\'ungunga qadar sodir bo\'lgan o\'zgarish yig\'indisi'],
+  [1,'Predmetli-manipulyativ faoliyat qaysi yosh davrida etakchi faoliyat?','Ilk bolalik davri'],
+  [1,'Psixologiya fanining odamlar o\'rtasidagi individual-psixologik tafovutlarni o\'rganuvchi sohasi?','Differensial psixologiya'],
+  [1,'Psixometrik testning vazifasi nima?','Individual farqlarni o\'lchash'],
+  [1,'Qaysi davrda muayyan guruhga mansub bo\'lish ehtiyoji yuqori darajaga yetadi?','O\'smirlik davri'],
+  [1,'Qaysi metod differensial psixologiyada keng qo\'llaniladi?','Eksperiment va kuzatish'],
+  [1,'Qabiliyat nima?','Ma\'lum faoliyatni muvaffaqiyatli bajarish imkonini beruvchi psixik xususiyat'],
+  [1,'Quvnoq, hazilkash, tashabbuskor, xafachilikni yengil o\'tkazib yuboruvchi, muvozanatli - qaysi tip?','Sangvinik'],
+  [1,'D.B.Elkonin "O\'yin psixologiyasi" asarini yozgan?','Ha, D.B.Elkonin'],
+  [1,'Rivojlanish psixologiyasi alohida fan sifatida qachon vujudga kelgan?','XIX asr'],
+  [1,'Rivojlanish psixologiyasining asosiy metodlari?','Kuzatish, eksperiment'],
+  [1,'Rivojlanish psixologiyasining predmeti?','Rivojlanishning yosh davrlari, bir yosh davridan keyingisiga o\'tishning sabablari, mexanizmlari, ontogenezda psixik rivojlanish qonuniyatlari'],
+  [1,'Statik tasavvurning ustunligi qaysi yosh bosqichida kuzatiladi?','Maktabgacha yosh davri'],
+  [1,'Taraqqiyotning eng yaqin zonasi bola amalga oshiradigan qanday amallardan tashkil topadi?','Kattalar yordamida bajara oladigan amallar'],
+  [1,'Tarbiyasi qiyin o\'smirlarni keltirib chiqaruvchi sabablar?','Shaxsning biologik nuqsonlari, shaxs tarbiyasidagi nuqsonlar, psixik kamolotidagi kamchiliklar, maktab ta\'limi va tarbiyasidagi kamchiliklar'],
+  [1,'Temperament nima?','Tug\'ma nerv tizimi xususiyatlariga asoslangan psixik faollik shakli'],
+  [1,'Uilyam Stern differensial psixologiyani qanday ta\'riflagan?','Psixik individual farqlar haqidagi fan'],
+  [1,'Xarakter deganda nima?','Shaxsning barqaror individual sifatlari majmui'],
+  [1,'Yosh psixologiyasining o\'rganish obyekti?','Ontogenezda normal, sog\'lom insonning o\'zgarishi va rivojlanishi'],
+  [1,'Yosh psixologiyasining sohalari?','Bolalar psixologiyasi, kichik maktab yoshidagi o\'quvchilar psixologiyasi, o\'smir psixologiyasi, oila psixologiyasi'],
+  [1,'Qaysi mutafakkirlar Sharqda shaxs rivojlanishiga oid qarashlarini bayon etishgan?','Ibn Sino, N.I.Novikov, A.Navoiy, Abdurahmon Jomiy'],
+  [1,'Bo\'yning o\'sishi o\'g\'il bolalarda necha yoshgacha davom etadi?','17-18 yoshgacha'],
+  [1,'Bo\'yning o\'sishi qizlarda necha yoshgacha davom etadi?','15-16 yoshgacha'],
+  [1,'Ta\'lim tarbiya jarayonini boshqarish usullari nechta?','3 ta: avtoritar, demokratik, liberal'],
+  [1,'Ta\'limga psixologik tayyorgarlik deganda nima nazarda tutiladi?','Bolaning obyektiv va subyektiv jihatdan maktab talabiga munosibligi'],
+  [1,'Ijtimoiy psixologik holat bo\'lgan o\'spirinlik qanday ifodalanadi?','O\'spirinning kattalar jamoasining to\'liq a\'zosi bo\'lishga tayyorgarligini subyektiv boshdan kechirishi - kattalik hissining yuzaga kelishi davri'],
+  [1,'9-10 yoshdan boshlab bolalarning tanqidni avvalgiga nisbatan og\'irroq qabul qila boshlashiga ko\'pincha qanday omil sabab bo\'ladi?','Tanqidiy fikr bolaning tengdoshlari guvohligida ifodalanishi'],
+  [1,'Ikki yoshga etgan bolaning faol so\'zlardan iborat lug\'at boyligi nechta so\'zni o\'z ichiga oladi?','200-300 ta so\'z'],
+  [1,'Keksalik davrida paydo bo\'lgan yangi psixologik tuzilma?','Hayotiy donishmandlik hamda ruhning chuqur qatlamlari bilan yashash qobiliyati'],
+  [1,'Keksalik davrini o\'rganadigan psixologiya sohasi?','Gerontopsixologiya'],
+  [1,'Narsa va hodisalar o\'rtasidagi bog\'lanishlarning to\'g\'riligi kichik maktab yoshida mantiqiy xulosalar bilan isbot bo\'lganda qanday hissiyot tug\'iladi?','Ishonch hissi'],
+  [1,'O\'smirlik davrining qanday avtonomiyalari mavjud?','Huquqiy, emotsional, makoniy'],
+  [1,'O\'spirinlik davri qanday psixologik xususiyatlari bilan boshqa davrlardan farq qiladi?','Jismoniy hamda aqliy jihatdan voyaga yetadi, kamolotga erishadi, dunyoqarashi, o\'z-o\'zini boshqarish kabi yetuk xususiyatlari tarkib topadi'],
+  [1,'O\'spirinlik davrida yuzaga keladigan yangi xususiyatlar?','E\'tiqod va dunyoqarash bilan bir qatorda axloqiy ideallar ham paydo bo\'ladi'],
+  [1,'Oliy Men (Super Ego) shaxsning tuzilmaviy tarkibi sifatida qaysi davrda shakllanadi?','3-6 yoshlar orasida'],
+  [1,'Qaysi yosh davridan bola emotsiyalar ambivalentligini tushuna boshlaydi?','Kichik maktab yoshi davrida'],
+  [1,'Differensial psixologiya qaysi fan bilan eng yaqin aloqada?','Pedagogik psixologiya'],
+  [1,'Differensial psixologiya so\'zi qaysi tildan olingan?','Lotin tilidan'],
+  [1,'Differensial psixologiyada "individual farq" atamasi nimani anglatadi?','Har bir insonning o\'ziga xos psixik xususiyatlarini'],
+  [1,'Differensial psixologiyada "intellekt farqlari" nimalarni ko\'rsatadi?','Har bir shaxsning o\'ziga xos fikrlash darajasini'],
+  [1,'Differensial psixologiyada temperament qaysi olim bilan bog\'liq?','Gippokrat'],
+  [1,'Ekstraversiya qanday shaxs turini bildiradi?','Tashqi muhitga, odamlar bilan muloqotga yo\'naltirilgan insonni'],
+  [1,'Empatiya nima?','Boshqa odamning g\'amu-tashvishlariga, quvonchiga sheriklik hissi'],
+  [1,'Giperaktivlik nima?','Haddan tashqari g\'ayrioddiy faoliyat bo\'lib, bola xatti-harakatining buzilishi'],
+  [1,'Konformizm bu?','Individning guruh bilan tashqi roziligi, aslida esa ichki noroziligi'],
+  [1,'Psixometrik testning vazifasi nima?','Individual farqlarni o\'lchash'],
+  [1,'Statik tasavvurning ustunligi qaysi yosh bosqichida kuzatiladi?','Maktabgacha yosh davri'],
+  [1,'Quydagi olimlardan qaysi biri o\'yin faoliyatini chuqur o\'rganib "O\'yin psixologiyasi" asarini yozgan?','D.B.Elkonin'],
+
+  // ===== CAT 2: UMUMIY PSIXOLOGIYA =====
+  [2,'Kayfiyat nima?','Shaxsning xatti-harakatlariga va ayrim ruhiy jarayonlariga muayyan vaqt davomida tus berib turuvchi emotsional holat'],
+  [2,'Affekt nima?','O\'ta kuchli, tez paydo bo\'luvchi va qisqa muddatda emotsional holatda kechuvchi jarayon'],
+  [2,'Stress nima?','Keskinlik vaziyatda yuzaga keladigan emotsional holat'],
+  [2,'1884 yildagi "Hissiyot nima?" maqolasi muallifi kim?','U.Jeyms'],
+  [2,'A.Adlerning psixologiyasi qanday nomlanadi?','Individual psixologiya'],
+  [2,'Abu Nasr Forobiy psixologik dunyoqarashini nimaga bog\'lagan?','Axloqiy fazilatlar va bilim uyg\'unligiga'],
+  [2,'Addiktiv xulq-atvor nimani anglatadi?','Giyohvandlik, qimorbozlik, internetga qaramlik kabi odatlar'],
+  [2,'Apatiya nima?','Befarqlik, loqaydlik'],
+  [2,'Arxetip tushunchasi kim tomonidan kiritilgan?','K.Yung'],
+  [2,'Axloqiy hislarga nimalar kiradi?','Burch, vijdon, vijdoniy burch, mas\'uliyatni his qilish'],
+  [2,'Bixeviorizm asoschisi kim?','Dj.B.Uotson'],
+  [2,'Deviant xulq-atvor deganda nima?','Ijtimoiy me\'yorlardan og\'uvchi xatti-harakat'],
+  [2,'Deviant xulqni keltirib chiqaruvchi biologik omillar?','Genetik buzilishlar va miya jarohatlari'],
+  [2,'Deviant xulqni keltirib chiqaruvchi ijtimoiy omilga misol?','Oilaviy beqarorlik'],
+  [2,'Deviant xulqni keltirib chiqaruvchi omillar tarkibi?','Biologik, psixologik va ijtimoiy omillar'],
+  [2,'Deviant xulqning profilaktikasi nimaga qaratilgan?','Og\'ishgan xatti-harakatlarning oldini olishga'],
+  [2,'Ehtiyojlar piramidasining muallifi?','A.Maslou'],
+  [2,'Ekzistensial psixologiya qachon shakllandi?','XX asr o\'rtalarida'],
+  [2,'Emotsional holatlarning nechta xususiyati bor?','3 ta'],
+  [2,'Emotsiya so\'zining ma\'nosi?','Hayojonlantiraman, larzaga keltiraman'],
+  [2,'Estetik hislar bu?','Ijobiy his bo\'lib go\'zal predmetlar ular orasidagi munosabatni aks etish bilan ifodalanadi'],
+  [2,'Faoliyat nima?','Odamning tashqi (jismoniy) va ichki (psixik) faolligi'],
+  [2,'Faoliyat tushunchasini tizimli ravishda kim tahlil qilgan?','A.N.Leontev'],
+  [2,'Faolligiga ko\'ra hislar nechta?','2 ta'],
+  [2,'Faolligiga ko\'ra hislar?','Astenik, stenik'],
+  [2,'Freydga ko\'ra inson psixikasi qanday tuziladi?','Id, Ego, Superego'],
+  [2,'Hissiyot bu?','Narsa va hodisalarga bo\'lgan munosabatimiz va ulardan hosil bo\'ladigan kechinmalarning ongda aks etishi'],
+  [2,'Intellektual hislar bu?','Inson tomonidan bilish faoliyatini his etish holati - hayrat, qiziqish, ishonch, quvonch, g\'urur, yangilikka intilish'],
+  [2,'Iroda bu?','Tashqi va ichki qiyinchiliklarni yengishni talab qiladigan qiliqlarni va harakatlarni inson tomonidan ongli boshqarilishi (E.G\'G\'oziyev)'],
+  [2,'Iroda va aql aynan bir narsa - bu fikr muallifi?','Spinoza'],
+  [2,'Irodaning negizida appersepsiya aktining sub\'ekti tomonidan ichki faollik - bu fikr kimniki?','V.Vund'],
+  [2,'Irodaviy harakatlar necha xil?','2 ta'],
+  [2,'Irodaviy harakatlar?','Jismoniy harakatlar, aqliy harakatlar'],
+  [2,'Irodaviy jarayonning eng muhim xususiyati?','Belgilangan qarorni ijro etish'],
+  [2,'Irodaviy sifatlar necha guruhga bo\'linadi?','3 ta'],
+  [2,'J.Piaje inson rivojlanishini qanday yo\'nalishda tahlil qilgan?','Kognitiv taraqqiyot'],
+  [2,'K.Rodjers nazariyasida kongruentlik nimani bildiradi?','Shaxsning ichki uyg\'unligi va muvofiqligi'],
+  [2,'Kim irodani jon haqidagi fanning muhim tushunchasi deb etirof etgan?','Arastu'],
+  [2,'Klassik psixoanaliz kim nomi bilan bog\'liq?','Zigmund Freyd'],
+  [2,'Kognitiv buzilishlar qaysi bilish jarayonlariga ta\'sir etadi?','Idrok, tafakkur va xotira buzilishida'],
+  [2,'Kognitiv psixoterapiya kimlar tomonidan rivojlantirilgan?','Bek va Ellis'],
+  [2,'Kuchi, tezligi, barqarorligigiga ko\'ra emotsional holatlar nechta?','4 ta'],
+  [2,'L.S.Vigotskiy fikricha xulq-atvor ijtimoiylashuvi qanday yuz beradi?','Tashqi muhit bilan o\'zaro ta\'sir orqali'],
+  [2,'Men-kontseptsiyasi deganda nima?','Shaxsning o\'zini anglash tizimi'],
+  [2,'Motiv bu ehtiyojlar yig\'indisi - bu fikr kimga tegishli?','A.Maslou'],
+  [2,'Motiv bu ehtiyojning his qilinishi va qondirilishi - bu fikr kimga tegishli?','S.L.Rubinshteyn'],
+  [2,'Motiv nima?','Faoliyatga undovchi ichki sabab'],
+  [2,'Motivatsiya nima?','Insonni faol faoliyatga undovchi sabablar majmui'],
+  [2,'Motivlar transformatsiyasi, tizimli rivojlanishi jarayon sifatida - bu fikr muallifi?','G.Olport'],
+  [2,'Motivni inson faoliyatiga yo\'nalgan aniq ehtiyojlar - bu fikr kimga tegishli?','A.N.Leontyev'],
+  [2,'O\'rgatish qonuni kim tomonidan ilgari surilgan?','E.Torndayk'],
+  [2,'Oliy hislar?','Axloqiy, intellektual, estetik, praksik'],
+  [2,'Praksik hislar bu?','Faoliyat natijasida yuzaga kelib ish jarayonida o\'zgaradi - ishning muvaffaqiyati qiyinchiligi, tugallanganligiga bog\'liq'],
+  [2,'Psixologik himoya mexanizmlari atamasi kimga tegishli?','Z.Freyd'],
+  [2,'Psixologik stressning necha xil turi mavjud?','2'],
+  [2,'Psixologik stressning turlari?','Informatsion, emotsional'],
+  [2,'Psixologiya faniga stress tushunchasini olib kirgan olim?','G.Sele'],
+  [2,'Sharq psixologiyasida shaxs qanday talqin qilinadi?','Ruhiy va axloqiy uyg\'unlik markazi sifatida'],
+  [2,'Shaxs buzilishlarini korreksiya qilishda psixoterapiya qanday rol o\'ynaydi?','Ruhiy muvozanatni tiklash'],
+  [2,'Shaxs psixologiyasining metodologik printsiplari?','Determinizm, sistemalilik, taraqqiyot, faoliyat'],
+  [2,'Shaxs tushunchasiga to\'g\'ri ta\'rif?','Ijtimoiy jihatdan shakllangan individual mavjudot'],
+  [2,'Shaxsdagi nomukammallik kompleksi kim tomonidan ilgari surilgan?','A.Adler'],
+  [2,'Shaxsni o\'rganish nazariyasi kim tomonidan asoslangan?','Gordon Alport'],
+  [2,'Sotsiogenezda shaxs qanday shakllanadi?','Ijtimoiy tajriba va muloqot orqali'],
+  [2,'Stenik his nima?','Inson faolligini oshiruvchi his'],
+  [2,'Stress bosqichlari nechta?','3 ta'],
+  [2,'Stress ko\'rinishga qarab turlari?','Destruktiv, konstruktiv'],
+  [2,'Temperament nima?','Nerv tizimi tipiga asoslangan individual xususiyatlar majmui'],
+  [2,'Xarakter aksentuatsiya nima?','Individual xarakter xususiyatlarning haddan tashqari kuchayishi'],
+  [2,'Xarakter aksentuatsiyasi kim tomonidan o\'rganilgan?','K.Leongard'],
+  [2,'Xarakter psixologiyada qanday tushuniladi?','Barqaror xulq-atvor xususiyatlari majmui'],
+  [2,'Xarakter so\'zining ma\'nosi?','Yunoncha "tamg\'a, belgi"'],
+  [2,'Xarakter termini ilk bor fanga kim kiritgan?','Teofrast'],
+  [2,'Xarakterning Distim tipi nima?','Kam gap, muloqotga kirishishga qiynaladi, pessimist'],
+  [2,'Hissiyot nazariyasini kimlar ishlab chiqgan?','U.Jeyms, K.Lange'],
+  [2,'Xulq-atvor shakllarining ijtimoiylashuvi kim nomi bilan bog\'liq?','L.S.Vigotskiy'],
+  [2,'Zamonaviy temperament nazariyalari kimlar nomi bilan bog\'liq?','Ayzenk, Pavlov, Strelau'],
+  [2,'Psixik jarayonlar, psixik holatlar, psixik xususiyatlar - bu nima?','Psixikaning tuzilishi'],
+  [2,'Psixoanalitik yondoshuv asoslari asoschisi?','Z.Freyd'],
+  [2,'Astenik his nima?','Inson faolligini pasaytiruvchi his (qo\'rquv, tushkunlik, g\'am)'],
+  [2,'Axloqiy hislar bu?','Jamiyat axloq tomonlariga bo\'ysinish yoki bo\'ysinmaslik bilan namoyon bo\'ladi'],
+  [2,'Axloqiy hislar qaysilar?','Burch, vijdon, vijdoniy burch, mas\'uliyatni his qilish'],
+  [2,'Deviant xulq-atvor klassifikatsiyasi nimalarni o\'z ichiga oladi?','Me\'yorlardan og\'uvchi xatti-harakat turlari tasnifi'],
+  [2,'Deviant xulq-atvor nima orqali namoyon bo\'ladi?','Me\'yorlarga zid ijtimoiy xatti-harakatlarda'],
+  [2,'Deviant xulqni keltirib chiqaruvchi psixologik omil?','Travmatik tajribalar va past o\'zini baholash'],
+  [2,'Emotsional holatlar?','Kayfiyat, affekt, stress, frustrasiya va boshqalar'],
+  [2,'K.Leongard xarakter aksentuatsiyasini shaxsda namoyon bo\'lishiga qarab tasniflari?','Demonstrativ, pedantik, qo\'zg\'aluvchan, gipertimik, distimik va boshqalar'],
+  [2,'Men-kontseptsiyasi va o\'z-o\'zini anglash o\'rtasidagi bog\'liqlik?','O\'zini idrok etish - Men kontseptsiyasining markazidir'],
+  [2,'Shaxs buzilishlarini korreksiya qilish nimaga asoslanadi?','Psixoterapevtik yondashuvga'],
+  [2,'Shaxs rivojlanishining individuallik xususiyatlari nimani bildiradi?','Har bir insonning o\'ziga xos psixik dinamikasini'],
+  [2,'Shaxsni o\'rganishning metodologik printsiplari?','Tizimlilik, tarixiylik, faoliyat yondashuvi'],
+  [2,'Stress ko\'rinishga qarab nechiga bo\'linadi?','2 ga: destruktiv va konstruktiv'],
+  [2,'Irodaviy harakatlar boshqa ruhiy jarayonlarga qorishtirib bo\'lmaydigan - bu fikr kimniki?','U.Djeyms'],
+  [2,'Harakatchan, chaqqon, tezda tushunadigan lekin jahldor - bu qaysi mijoz?','Xolerik'],
+  [2,'Quvnoq, hazilkash, tashabbuskor, xafachilikni yengil o\'tkazib yuboradigan muvozanatli - bu qaysi tip?','Sangvinik'],
+
+  // ===== CAT 3: PSIXODIAGNOSTIKA =====
+  [3,'"Reliability" (ishonchlilik) nimani bildiradi?','Test natijalari bir xil sharoitda barqaror chiqishini'],
+  [3,'1937 yilda Kaliforniya universitetida yaratilgan aqliy yetuklikni aniqlash testini kimlar yaratdi?','Edvard Li Torndayk va Luis Lion Terstoun'],
+  [3,'Diagnostik hisobotning maqsadi nima?','Olingan ma\'lumotlarni tizimlashtirish'],
+  [3,'Diagnostik ma\'lumotlar qayerdan olinadi?','Kuzatuv, suhbat va testlardan'],
+  [3,'Diagnostik ma\'lumotlarni qayta ishlashda eng muhim bosqich?','Statistik tahlil'],
+  [3,'Diagnostik ma\'lumotlarni talqin qilishda xato nimadan kelib chiqadi?','Subyektiv baholash'],
+  [3,'Diagnostik natijalar bilan ishlashda konfidensiallik nimani anglatadi?','Shaxsiy ma\'lumotlarni sir saqlash'],
+  [3,'Diagnostik natijalarni to\'g\'ri talqin qilishda nimalar muhim?','Kontekst, yosh, sharoit'],
+  [3,'Diagnostik tavsiyalar qaysi bosqichda ishlab chiqiladi?','Yakunida'],
+  [3,'Diagnostik testlarni o\'tkazishda asosiy talab nima?','Standart sharoitni saqlash'],
+  [3,'Gezell bolalarning nimani o\'rganish uchun kinematografiyadan foydalandi?','Xulq-atvor'],
+  [3,'Guruhiy diagnozning maqsadi nima?','Butun jamoa psixologik muhitini tahlil qilish'],
+  [3,'J.Kettell "Intellekt va uning o\'lchash masalasi" maqolasi qachon nashr etilgan?','1890 yilda'],
+  [3,'L.F.Burlachuk bo\'yicha diagnostik metodlari?','Formallashgan metodlar va kamformallashgan metodlar'],
+  [3,'L.F.Burlachuk bo\'yicha tadqiqot metodlari?','Noeksperimental va eksperimental metodlar'],
+  [3,'L.F.Burlachuk fikriga ko\'ra obyektiv yondashuv?','Diagnostika faoliyatni bajarish samaradorligiga qarab amalga oshiriladi'],
+  [3,'L.F.Burlachuk fikriga ko\'ra proyektiv yondashuv?','Tashqi jihatdan neytral, noaniq stimul bilan o\'zaro ta\'sirni tahlil qilish asosida diagnostika'],
+  [3,'L.F.Burlachuk fikriga ko\'ra subyektiv yondashuv?','Sinaluvchining o\'zi haqida bergan ma\'lumotlari, o\'z-o\'zini tavsiflash va baholash asosida'],
+  [3,'L.F.Burlachuk ta\'rifiga ko\'ra test nima?','Standartlashtirilgan, faollikni talab etuvchi, vaqt jihatidan chegaralangan holda bajariladigan topshiriqlar bo\'lib, natijasi miqdor va sifat jihatidan baholanadi'],
+  [3,'Lyutsius Gezellning "Go\'daklik va inson kamoloti" asari qachon yaratilgan?','1929 yilda'],
+  [3,'Ma\'lumotlarni qayta ishlash deganda nima tushuniladi?','Javoblarni matematik-statistik tahlil qilish'],
+  [3,'Prognostik tashxisning maqsadi nima?','Kelajakdagi rivojlanish imkoniyatini baholash'],
+  [3,'Psixodiagnost uchun eng muhim vazifa?','To\'g\'ri psixologik diagnoz qo\'yish hamda psixokorreksiya ishlarini belgilash'],
+  [3,'Psixodiagnostik hisobotda nimalar bo\'lishi kerak?','Maqsad, metod, natija, xulosa va tavsiyalar'],
+  [3,'Psixodiagnostik jarayon nechta asosiy bosqichdan iborat?','5'],
+  [3,'Psixodiagnostik jarayonda natijalarni tahlil qilish qaysi bosqichga tegishli?','Uchinchi bosqich'],
+  [3,'Psixodiagnostik jarayonning muvaffaqiyatli bo\'lishi nimaga bog\'liq?','Psixolog malakasi va etikasiga'],
+  [3,'Psixodiagnostik metodlar qaysilarni o\'z ichiga oladi?','Eksperiment, suhbat, test'],
+  [3,'Psixodiagnostik metodlardan biri bo\'lmagan usul?','Hipnoz'],
+  [3,'Psixodiagnostik suhbatning asosiy maqsadi?','Ishonchli munosabat o\'rnatish'],
+  [3,'Psixodiagnostik tahlil natijasida psixolog nima beradi?','Psixologik xulosa va tavsiya'],
+  [3,'Psixodiagnostika jarayonida "feedback" nima?','Javob qaytarish, teskari aloqa'],
+  [3,'Psixodiagnostika jarayonida eng asosiy tamoyil?','Maxfiylik va ob\'yektivlik'],
+  [3,'Psixodiagnostika jarayonida etika qoidalari nima uchun zarur?','Mijozni himoya qilish uchun'],
+  [3,'Psixodiagnostika jarayonining birinchi bosqichi nimalarni o\'z ichiga oladi?','Tadqiqot maqsadini aniqlash va tekshiruvni rejalashtirish'],
+  [3,'Psixodiagnostika jarayonining to\'g\'ri ketma-ketligi?','Maqsad → Test → Natijalar → Tavsiya'],
+  [3,'Psixodiagnostika natijalari asosida psixologning asosiy vazifasi?','Shaxsga mos yordam va tavsiya berish'],
+  [3,'Psixodiagnostika natijalari qachon ishonchli hisoblanadi?','Tajriba asosida tasdiqlansa'],
+  [3,'Psixodiagnostika nega "fan" deb ataladi?','Chunki u ilmiy metodlarga tayanadi'],
+  [3,'Psixodiagnostika psixologiyaning qaysi sohasi bilan bog\'liq?','Eksperimental psixologiya'],
+  [3,'Psixodiagnostika psixoterapiyadan nimasi bilan farq qiladi?','Diagnostika muammoni aniqlaydi, terapiya davolaydi'],
+  [3,'Psixodiagnostika so\'zi qanday ma\'noni bildiradi?','Psixik holatni aniqlash'],
+  [3,'Psixologik diagnoz deganda nimani tushunamiz?','Psixik jarayonlar holatini aniqlash'],
+  [3,'Psixologik diagnozning turlari nechta?','4 ta'],
+  [3,'Psixologik prognoz qanday maqsadda tuziladi?','Kelajakdagi holatni taxmin qilish'],
+  [3,'Shaxsiy diagnoz deganda nima?','Shaxsning individual psixik xususiyatlarini aniqlash'],
+  [3,'Simptomatik diagnoz deb nimaga ataladi?','Bunda tashxis qo\'yish muayyan belgi yoki xususiyatlarni ta\'kidlash bilan cheklanadi'],
+  [3,'Standartlashtirish bu?','Inglizcha "standart" so\'zidan - bir shaklga, me\'yorga keltirish'],
+  [3,'Tadqiqot va tekshiruv o\'rtasidagi asosiy farq?','Tadqiqot yangi bilim yaratishga yo\'naltiriladi'],
+  [3,'Tarkibiy tahlil usuli (kontent analiz) bu?','Tahlil predmeti axborot berish qobiliyatiga ega bo\'lgan matnlar tarkibidan iborat'],
+  [3,'Tavsiya berishning maqsadi nima?','Psixologik muammoni yechishda yordam berish'],
+  [3,'Test natijalarini tahlil qilishda qanday yondashuv qo\'llaniladi?','Statistik va sifatli'],
+  [3,'Testlashtirishda mahalliy normalar nima?','Jinsi, yoshi, geografik hududi, sotsial-iqtisodiy statusi bilan tafovutlanuvchi tor toifali kishilar uchun ishlab chiqiladi'],
+  [3,'XIX asrning 30-yillarida qaysi nemis olimi diqqat xususiyatlarini aniqlash bo\'yicha tadqiqot olib bordi?','Volf tomonidan'],
+  [3,'Psixodiagnostik intervyu qanday maqsadda o\'tkaziladi?','Psixik holatni chuqur o\'rganish'],
+  [3,'Psixodiagnostika natijalarini boshqalar bilan bo\'lishish uchun nima zarur?','Mijozning roziligi'],
+  [3,'Psixodiagnostik ma\'lumotlar qanday saqlanishi kerak?','Maxfiy tarzda'],
+  [3,'Psixodiagnostika jarayonida "tahlil" bosqichi nimani anglatadi?','Natijalarni solishtirish va talqin qilish'],
+  [3,'Psixodiagnostika jarayonida mijozning ishonchi nimaga bog\'liq?','Psixologning muloqot madaniyatiga'],
+  [3,'Psixodiagnostika jarayonida tadqiqotchi qanday rol o\'ynaydi?','Faol ishtirokchi va tahlilchi'],
+  [3,'Psixodiagnostika jarayonida xatoliklar asosan qachon sodir bo\'ladi?','Ma\'lumotlar noto\'g\'ri talqin qilinganda'],
+  [3,'Psixodiagnostika kimlar faoliyatida muhim o\'rin tutadi?','Psixologlar va kadrlar bo\'limi xodimlari'],
+  [3,'Psixodiagnostika natijalari kimga foyda keltiradi?','Mijozga va mutaxassisga'],
+  [3,'Psixodiagnostika natijalarini talqin qilishda nimalar inobatga olinadi?','Shaxsning hozirgi holati va vaziyat'],
+  [3,'Psixodiagnostika natijalarining ishonchliligi nimalarga bog\'liq?','Testning sifati va sharoitga'],
+  [3,'Psixodiagnostika sohasida "metod tanlash" bosqichining asosiy maqsadi?','Eng qulay testlarni tanlash'],
+  [3,'Psixodiagnostika testlari kimlar uchun mo\'ljallangan?','Har xil yoshdagi shaxslar uchun'],
+  [3,'Psixologik prognoz natijasida nimalar aniqlanadi?','Rivojlanish tendensiyasi va imkoniyatlar'],
+  [3,'Psixologik tahlilning asosiy maqsadi?','Shaxs xatti-harakatini tushunish'],
+  [3,'Psixologik tekshiruv qanday hollarda o\'tkaziladi?','Muammoni aniqlash va yordam uchun'],
+  [3,'Psixologik tekshiruvdan o\'tayotgan shaxsning roziligi nima uchun kerak?','Axloqiy va huquqiy talabni bajarish uchun'],
+  [3,'Tadqiqotchi psixologning axloqiy mas\'uliyati nimalardan iborat?','Sub\'ektga zarar yetkazmaslik'],
+  [3,'Tadqiqotning muvaffaqiyati asosan nimaga bog\'liq?','To\'g\'ri metod tanlanishiga'],
+  [3,'Talqin qilish bosqichida psixolog nima qiladi?','Natijalarni tushuntiradi va izohlaydi'],
+  [3,'Tavsiyalar kimlar uchun tayyorlanadi?','Mijoz yoki tashkilot uchun'],
+  [3,'Test o\'tkazishdan oldin psixolog nimalarni tayyorlashi kerak?','Sharoit, materiallar va ishtirokchilarni'],
+  [3,'Testni o\'tkazish jarayonida psixolog nimalarga e\'tibor beradi?','Mijozning hissiy holatiga'],
+  [3,'Psixodiagnostika jarayonida psixologning asosiy vazifasi?','Neytral va ob\'yektiv bo\'lish'],
+
+  // ===== CAT 4: FALSAFA =====
+  [4,'"Qutadg\'u-bilik" risolasining muallifi kim?','Yusuf Xos Hojib'],
+  [4,'Falsafiy ongni yangilanish zarurati nimada?','Yangi fanlar yutuqlarini hisobga olish kerakligida'],
+  [4,'"Amaliyot" ("praktika") tushunchasini ta\'riflang?','Tabiiy va ijtimoiy borliqni qayta o\'zgartirishdagi moddiy-hissiy faoliyat'],
+  [4,'"Dialektik ziddiyat" nima?','Narsa, hodisa rivojlanishining ichki manbai'],
+  [4,'"Dialektika" iborasining ma\'nosi?','Bahs va suhbatlashish san\'ati'],
+  [4,'"Dialektika" ta\'limotiga asos solgan faylasuf?','Geraklit'],
+  [4,'"Dil ba yoru dast ba kor" iborasi kimga tegishli?','Bahovuddin Naqshband'],
+  [4,'"Din" deganda nima?','G\'ayri ilmiy dunyoqarash bo\'lib, ijtimoiy ong shaklidir'],
+  [4,'"Dualizm" atamasi nima?','Olamning asosida ikkita asos yotadi'],
+  [4,'"Dunyoqarash" nima?','Dunyo, inson haqidagi eng umumiy qarashlar, baholar va tamoyillar yig\'indisi'],
+  [4,'"Fan"ning ta\'rifi?','Ijtimoiy ong shakllaridan biri, inson bilimining asosiy ko\'rsatqichi va natijasi'],
+  [4,'"Fazo (makon)" nima?','Materiyaning tuzilishi, qo\'lami va ma\'lum tartibda joylanishini ifodalovchi yashash usuli'],
+  [4,'"Fozil odamlar shahri" asarining muallifi?','Abu Nasr Forobiy'],
+  [4,'"Haqiqat"ning turlari?','Absolyut (mutloq) va nisbiy'],
+  [4,'"Harakat" nima?','Borliqdagi har qanday o\'zgarish, aloqalar'],
+  [4,'"Ijtimoiy falsafa"ning predmeti?','Jamiyat, uning kelib chiqishi va rivojlanishini yaxlit tarzda o\'rganish'],
+  [4,'"Ijtimoiy ong" degani nima?','Jamiyatning o\'z-o\'zini, o\'zining ijtimoiy borlig\'ini va uni qurshab turgan voqelikni anglashi'],
+  [4,'"In\'ikos" nima?','Materiyaning eng umumiy xossasi: aks ettirish'],
+  [4,'"Inson"ning mohiyati nimada?','Inson - aqllli biologik organizm'],
+  [4,'"Jamiyat" tushunchasiga falsafiy ta\'rif?','Ma\'lum maqsadni ko\'zlab, o\'z ixtiyorlari bilan uyushgan kishilar to\'plami'],
+  [4,'"Kategoriya" nima?','Borliq va bilishning muhim tamoyillari, munosabatlari, aloqalarini ifodalovchi eng umumiy falsafiy tushunchalar'],
+  [4,'"Kitob ash-shifo" falsafiy asarining muallifi?','Ibn Sino'],
+  [4,'"Lison-ut-tayr" falsafiy asarining muallifi?','Alisher Navoiy'],
+  [4,'"Logika" atamasining ma\'nosi?','So\'z, fikr, qonuniyat'],
+  [4,'"Madaniyat" nima?','Insoniyat tomonidan yaratilgan moddiy va ma\'naviy boyliklar, qadriyatlar majmui'],
+  [4,'"Monizm" tushunchasi nimani bildiradi?','Olamning negizida bitta asos yotadi'],
+  [4,'"Muallimi soniy" deb nomlangan faylasuf?','Forobiy'],
+  [4,'"Narsa o\'zida" va "narsa biz uchun" g\'oyasining muallifi?','Kant'],
+  [4,'"Ong" nima?','Inson ruhiy in\'ikosining oliy shakli va uning faoliyatini tartibga soluvchi omil'],
+  [4,'"Oqib turgan daryoga ikki marta tushib bo\'lmaydi" - bu kim?','Geraklit'],
+  [4,'"Qadriyat" deganda nima?','Odamlarning ehtiyoj, manfaatlarini qondiruvchi va kelajak istiqboli uchun yangi imkoniyatlar yaratuvchi moddiy, ma\'naviy boyliklar'],
+  [4,'"Qonun" nima?','Narsa va hodisalarning muhim, zaruriy, umumiy va barqaror ichki bog\'lanishlari'],
+  [4,'"Sabab" kategoriyasining ta\'rifi?','O\'ziga muvofiq keladigan biror natijani keltirib chiqaruvchi holat, vaziyat'],
+  [4,'"Sifat" tushunchasi nima?','Narsalarning ichki va tashqi muayyanligini ta\'minlovchi xossa, belgi, xususiyatlar birligi'],
+  [4,'"Substantsiya" nima?','Xilma-xil buyum, hodisalar ichki birligini bildirib, shu buyum, hodisalar vositasida mavjud'],
+  [4,'"Tabiat" tushunchasi?','Bizni o\'rab turgan moddiy olam'],
+  [4,'"Taraqqiyot" nima?','Jamiyatdagi sifatiy o\'zgarish va rivojlanishlar'],
+  [4,'"Til" tushunchasi ta\'rifi?','Fikrning bevosita voqe bo\'lish usuli, aloqa vositasi'],
+  [4,'"Umuminsoniy muammolar" tushunchasi?','Yer planetasi, insoniyat tsivilizatsiyasining mavjudligiga tahdid solayotgan muammolar'],
+  [4,'"Xalq" nima?','Moddiy va ma\'naviy boyliklar ijodkori, ijtimoiy jarayonlarning sohibi, tarixni yaratuvchi omma'],
+  [4,'"Zaruriyat" kategoriyasining ta\'rifi?','Imkoniyatning yuzaga chiqishi'],
+  [4,'"Zidiyat" rivojlanish falsafasida qanday ahamiyatga ega?','Rivojlanishning harakatlantiruvchi kuchi sifatida qaraladi'],
+  [4,'«Dialektik inkor»ni qanday tushunasiz?','Narsa va hodisaning ichki rivojlanish zarurati natijasi, vorisiylikka asoslangan sifat o\'zgarishi'],
+  [4,'«Estetika» so\'zining lug\'aviy ma\'nosi?','Go\'zallik'],
+  [4,'«Falsafa» atamasini birinchi bo\'lib qaysi faylasuf o\'z asarida qo\'llagan?','Pifagor'],
+  [4,'Abu Nasr Forobiyning estetik qarashlari bayon etilgan asari?','"Baxt-saodatga erishuv haqida"'],
+  [4,'Algebra (al-jabr) ilmining asoschisi kim?','Muhammad Xorazmiy, Xorazmda'],
+  [4,'Alisher Navoiy asarlari?','"Lisonut tayr", "Mahbubul qulub", "Majolisun nafois"'],
+  [4,'Amaliyot turlarining qaysi biri belgilovchi sanaladi?','Moddiy ishlab chiqarish faoliyati'],
+  [4,'Antropologiya fani nimani o\'rganadi?','Insonni o\'rganadi'],
+  [4,'Aqliy bilish shakllari (bosqichlari) tartibi?','Tushuncha, hukm, xulosa'],
+  [4,'Argumentlar bu?','Tezisning chinligini asoslash uchun keltirilgan hukmlar'],
+  [4,'Atomistik nazariyaga asos solgan qadimgi yunon faylasufi?','Demokrit'],
+  [4,'Axloq deganda nima?','Axloq ijtimoiy ong shakllaridan biri, insonning yurishturish qoidalari va xulq-atvori normalari'],
+  [4,'Axloqning tarkibiy tuzilishi?','Axloqiy ong, axloqiy normalar, axloqiy faoliyat va axloqiy munosabatlar'],
+  [4,'Barcha fanlar uchun xos bo\'lgan metodlar?','Umumiy ilmiy metodlar'],
+  [4,'Bilish bosqichlari?','Hissiy bilish, aqliy bilish'],
+  [4,'Bilishning dialektik yo\'li?','Xissiy bilishdan aqliy bilishga va undan amaliyotga'],
+  [4,'Borliqning falsafiy mazmuni?','Borliq - obyektiv va subyektiv (ma\'naviy) realliklar birligidir'],
+  [4,'Davlat bu?','Jamiyatni boshqarishni amalga oshiruvchi tuzilma va tashkilotlar majmuasi'],
+  [4,'Dialektika kategoriyalariga xos belgilar?','Xususiylik, obyektivlik, qonuniylik, tarixiylik'],
+  [4,'Dialektikaning mohiyatini ifodalovchi qonun?','Miqdor o\'zgarishlarining sifat o\'zgarishlariga o\'zaro o\'tish qonuni'],
+  [4,'Dunyoqarashning qadimgi turlari?','Mifologik, diniy, falsafiy'],
+  [4,'Dunyoqarashning tuzilishi?','Dunyoni sezish, idrok etish, tushunish'],
+  [4,'Eng birinchi estetik qarash va g\'oyalar qayerda vujudga kelgan?','Qadimgi Yunonistonda'],
+  [4,'Estetika fani asoschisi kim?','A.Baumgarten'],
+  [4,'Estetika fani predmeti?','Insonning voqelikka estetik munosabati va san\'atning umumiy qonuniyatlarini o\'rganadi'],
+  [4,'Etika fanining asosiy tushunchalari?','Yaxshilik, yomonlik, vijdon, adolat, burch va boshqalar'],
+  [4,'Etikada "vijdon" kategoriyasi qanday ta\'riflanadi?','Vijdon - o\'z xulqini muayyan axloqiy normalar nuqtai nazaridan baholash, nazorat va tahlil qilish'],
+  [4,'Etnik jamoalarning tarixiy turlari?','Urug\', qabila, elat, millat'],
+  [4,'Evropa o\'rta asrlar falsafasining yirik namoyandalari?','Avreliy Avgustin, Foma Akvinskiy'],
+  [4,'Falsafa jamiyatda qanday rol o\'ynaydi?','Tarixiy hodisalarga to\'g\'ri yondoshishga, davr ruhini falsafiy anglashga, kelajakni ilmiy bashorat qilishga imkon yaratadi'],
+  [4,'Falsafa nimadan bahs yuritadi?','Dunyo, undagi inson o\'rni, insonning dunyoga bo\'lgan munosabati haqidagi eng umumiy nazariy qarashlar tizimi'],
+  [4,'Falsafa paydo bo\'lgan davr?','Miloddan avvalgi ikki minginchi yillikning boshida'],
+  [4,'"Falsafa" atamasining lug\'aviy ma\'nosi?','Donishmandlikni sevish'],
+  [4,'Falsafaning asosiy sohalari?','Ontologiya, gnoseologiya, etika, estetika, mantiq, ijtimoiy falsafa'],
+  [4,'Falsafaning asosiy vazifasi?','Aqlili fikrlash madaniyatini tarbiyalash'],
+  [4,'Falsafaning bilish nazariyasi bilan bog\'liq atama?','Gnoseologiya'],
+  [4,'Falsafaning funktsiyalari (vazifalari)?','Metodologik, dunyoqarashlik, gnoseologik, tarbiyaviy'],
+  [4,'Falsafaning predmeti bu?','Borliq'],
+  [4,'Fan mavjud barcha muammolarni hal etishi mumkin degan falsafiy oqim?','Stsiyentizm'],
+  [4,'Faqat tajribada o\'z tasdig\'ini topgan bilimgina haqiqiy - qaysi falsafiy dunyoqarash?','Pragmatizm'],
+  [4,'Fitrat tomonidan "Sharq Gegeli" deb nom olgan mutafakkir?','Mirzo Bedil'],
+  [4,'Gegel ta\'limotining yutugi nimada?','"Mutloq ruh" g\'oyasiga asoslangan falsafiy tizimida'],
+  [4,'Harakatning falsafiy asosiy turlari?','Mexanik, fizikaviy, ximiyaviy, biologik, ijtimoiy'],
+  [4,'Hissiy bilish shakllari?','Sezgi, idrok, tasavvur'],
+  [4,'I.Kant etikasining tayanch tushunchalari?','Burch va axloqiy imperativlar'],
+  [4,'Ibn Sinoning asarlari?','"Kitobi ash-Shifo"'],
+  [4,'Ijtimoiy ong darajalari?','Siyosiy ong, huquqiy ong, axloqiy ong, diniy ong, estetik ong'],
+  [4,'Ijtimoiy ongning shakllari?','Siyosiy, huquqiy, axloqiy, diniy, estetik, ekologik'],
+  [4,'Ilm yetmagan joyda e\'tiqodni qo\'llash - qaysi oqim?','Neotomizm'],
+  [4,'Ilmiy bilishning empirik darajasi shakllari tartibi?','Eksperiment, o\'lchash, taqqoslash, kuzatish'],
+  [4,'Ilmiy bilishning nazariy darajasi usullari?','Analiz va sintez; induktsiya va deduktsiya; analogiya; modellashtirish; tarixiylik va mantiqiylik'],
+  [4,'Insoniyatning bundan keyingi taqdirini belgilaydigan sfera?','Noosfera'],
+  [4,'Jadidchilik harakatining mohiyati?','Ma\'rifatni targ\'ib qilish'],
+  [4,'Jamiyat iqtisodiy hayotiga bevosita ta\'sir ko\'rsatuvchi ijtimoiy ong shakli?','Axloqiy ong'],
+  [4,'Koinot atomlardan tashkil topgan degan g\'oyani kimlar ilgari surgan?','Levikipp va Demokrit'],
+  [4,'Ma\'naviy madaniyatning ijtimoiy vazifasi?','Odamlarni ma\'rifatli qilish, ma\'naviy go\'zalligiga erishish'],
+  [4,'Mantiq fanining asoschisi kim?','Gegel'],
+  [4,'Mantiq fanining o\'rganish ob\'ekti?','Tafakkur'],
+  [4,'Markaziy Osiyoda keng tarqalgan tasavvuf tariqatlarining asoschilari?','Yassaviy, Naqshband, Kubro'],
+  [4,'Metafizika olamni qanday tushuntiradi?','Narsa-hodisalar o\'zgarmaydi, konkret holatda turadi'],
+  [4,'Metodologiya nima?','Nazariy va amaliy faoliyatini tiklash va tashkil etish tamoyillari va usullari'],
+  [4,'Mif atamasi qanday ma\'nolarni anglatadi?','Rivoyat, afsona'],
+  [4,'Millatning muhim belgilari?','Hududi, davlati, iqtisodiy hayoti, tili, o\'zligini anglash, madaniyatining umumiyligi'],
+  [4,'Muqaddas "Avesto" kitobining muallifi?','Zardo\'sht'],
+  [4,'O\'rta asr falsafasi negizida nima yotadi?','Kosmotsentrizm'],
+  [4,'O\'rta Osiyo mutafakkirlaridan kim "O\'tmish avlodlarning yodgorliklari" asarini yozgan?','Beruniy'],
+  [4,'O\'rta Osiyoda "Sharq uyg\'onishi" davri (IX-XII asrlar) yirik namoyondalari?','Farg\'oniy, Forobiy, Ibn Sino, Beruniy'],
+  [4,'O\'zbekistonda falsafiy tafakkur tarixi bo\'yicha yirik allomalar?','I.Mo\'minov, M.Hayrullaev, M.Baratov'],
+  [4,'Olamdagi barcha narsa-hodisalarning sababi o\'t (olov) deb hisoblagan faylasuf?','Suqrot'],
+  [4,'Ongning tabiati nimada ifodalanadi?','Uning moddiy dunyo bilan aloqasida'],
+  [4,'O\'tmish Sharq faylasuflari ijodidagi bosh g\'oya?','Fozil jamoa va komil inson g\'oyasi'],
+  [4,'Qadimgi falsafaning eng rivojlangan joyi?','Yunoniston (Gretsiya)'],
+  [4,'Qadimgi hind falsafasining asosiy yodgorliklari?','"Vedalar", "Upanishadalar"'],
+  [4,'Qadimgi Xitoy falsafasining asosiy oqimlari?','Konfutsiylik, daosizm'],
+  [4,'Qadimgi yunon falsafasida "g\'oyalar dunyosi va narsalar dunyosi" ta\'limoti asoschisi?','Aflotun'],
+  [4,'Qadriyatlarni maxsus o\'rganadigan fan?','Aksiologiya'],
+  [4,'Raddiya nima?','Isbotni buzishga qaratilgan mantiqiy amal'],
+  [4,'Rivojlanish falsafasi nimani o\'rganadi?','Inson, jamiyat va tafakkurning o\'zgarish hamda taraqqiyot qonuniyatlarini'],
+  [4,'So\'fizm - tasavvuf falsafasining asosiy mohiyati?','Ollohni tanish, ishqi ilohiyga erishish va u bilan qo\'shilib ketishda'],
+  [4,'Tafakkur shakli nima?','Fikrning mazmunini tashkil etuvchi elementlarning bog\'lanish usuli'],
+  [4,'Tasavvuf tariqati bosqichlari?','Shariat, tariqat, ma\'rifat, haqiqat'],
+  [4,'Tasavvuf ta\'limotining O\'rta Osiyodagi yirik vakillari?','Yassaviy, Najmiddin Qubro, Bahovuddin Naqshband, Abdulxoliq G\'ijduvoniy'],
+  [4,'Tomizm falsafasining asoschisi?','Foma Akvinskiy'],
+  [4,'Umuminsoniy qadriyatlarni qanday tushunasiz?','Butun insoniyat manfaatlari va ehtiyojlariga daxldor qadriyatlar'],
+  [4,'XX asr falsafasining asosiy xususiyatlari?','Inson muammosini yangicha talqin qilish, butun falsafani yangilashga urinish'],
+  [4,'XX asr falsafiy oqimlaridan qaysi biri inson, uning hayoti va o\'limi muammolarini o\'rganadi?','Ekzistentsionalizm'],
+  [4,'"To\'rt ulus tarixi" asarini yozgan muallif?','Mirzo Ulug\'bek'],
+  [4,'"Zichi jadidi Ko\'ragoniy" asarining muallifi?','Ulug\'bek'],
+  [4,'Falsafada substantsiya deganda nima anglashiladi?','Olam va narsalar mohiyati'],
+  [4,'Qaysi qatorda "gnoseologiya"ga to\'g\'ri javob?','Olamni bilish mumkinligini tan oladi'],
+  [4,'Ekzistentsializm namoyondalari?','Xaydegger, Yaspers'],
+  [4,'Erkinlik - insonning yakka o\'zi tomonidan yaratiladigan ichki ruhiy holat - deb kim hisoblaydi?','Ekzistentsializm'],
+  [4,'Markaziy Osiyo mutafakkirlaridan "Muallimi soniy" unvoniga sazovor bo\'lgan?','Forobiy'],
+  [4,'Abu Nasr Forobiy asarlari?','"Ixso-al-ulum", "Kitob al-jadal", "Fozil odamlar shaxri"'],
+  [4,'"Olam yonib, so\'nib turuvchi olovdan iborat" - bu kim?','Geraklit'],
+  [4,'Falsafa insonni qanday tavsiflaydi?','Inson - o\'zida biologik, ijtimoiy va psixologik xususiyatlarni mujassamlashtiruvchi oliy mavjudot'],
+  [4,'Fitrat tomonidan yozilgan iqtibos: "Agar biz boshqa millatlarga yutkazib qo\'ymaslikni maqsad qilsak..."','Bu so\'zlar Fitratga tegishli'],
+  [4,'O\'zbekistonning milliy mustaqilligi uchun kurashgan yirik namoyondalar?','Fitrat, Bexbudiy, Cho\'lpon, Qodiriy'],
+  [4,'Fuqarolik jamiyatining bosh tamoyili?','Bozor iqtisodiyoti munosabatlarini shakllantirish'],
+  [4,'Mustaqillik sharoitida o\'zbek falsafasining zaruriy asoslari?','Barcha asoslarning birligi'],
+  [4,'Ijtimoiy taraqqiyotning "o\'zbek modeli" nimaga asoslanadi?','Yangisini qurmay turib, eskisini buzmaslik tamoyiliga'],
+  [4,'"Dialektika" ni siz qanday tushunasiz?','Umumiy aloqadorlik, o\'zgarish va rivojlanish haqidagi ta\'limot'],
+  [4,'"Erkinlik" ning falsafiy ma\'nosi?','Erkinlik - har kim xohlagan istagini bajarish'],
+  [4,'"Hayot" deganda nima?','Organizmning tashqi muhit bilan modda almashinuvi'],
+  [4,'"Ijtimoiy harakat" nima?','Jamiyatning faoliyat ko\'rsata olishini ta\'minlovchi moddiy va ma\'naviy jarayonlar'],
+  [4,'"Miqdor" nima?','Adad ko\'rsatkichi'],
+  [4,'"Sokinlik" ni qanday tushunasiz?','Narsalarning doimiy barqarorlik holatining saqlanishi'],
+  [4,'"Tabiat" tushunchasini aniqlang?','Tabiat - bu bizni o\'rab turgan moddiy olam'],
+  [4,'"Taraqqiyot" nima?','Jamiyatdagi sifatiy o\'zgarish va rivojlanishlar'],
+  [4,'"Til" tushunchasi ta\'rifi?','Fikrning bevosita voqe bo\'lish usuli, aloqa vositasi'],
+  [4,'"TSivilizatsiya" nima?','Jamiyat taraqqiyotining oliy bosqichi'],
+  [4,'"Umumbashariy muammolar" tushunchasi?','Yer planetasi, insoniyat tsivilizatsiyasining mavjudligiga tahdid solayotgan muammolar'],
+  [4,'"Xalq" nima?','Moddiy va ma\'naviy boyliklar ijodkori, ijtimoiy jarayonlarning sohibi, tarixni yaratuvchi omma'],
+  [4,'"Zaruriyat" kategoriyasining ta\'rifi?','Imkoniyatning yuzaga chiqishi'],
+  [4,'"Zidiyat" rivojlanish falsafasida qanday ahamiyatga ega?','Rivojlanishning harakatlantiruvchi kuchi sifatida qaraladi'],
+  [4,'«Dialektik inkor» ni qanday tushunasiz?','Narsa va hodisaning ichki rivojlanish zarurati natijasi, vorisiylikka asoslangan sifat o\'zgarishi'],
+  [4,'«Estetika» so\'zining lug\'aviy ma\'nosi?','Go\'zallik'],
+  [4,'«Go\'zallik qimmatli haqiqat bilan yakunlanib, yuz chandon go\'zallik kashf etadi» - bu kimning fikri?','Leonardo da Vinchi'],
+  [4,'Axloq deganda nima?','Axloq ijtimoiy ong shakllaridan biri, insonning yurishturish qoidalari va hulq-atvori normalari'],
+  [4,'Axloq ko\'proq qaysi fanlar bilan bog\'liq?','Pedagogika va huquqshunoslik fanlari bilan'],
+  [4,'Axloqiy evdemonizm nima?','Baxtga erishish orqali axloqiy komillikka intilish'],
+  [4,'Axloqiy gedonizm nima?','Hayotdan huzurlanish, rohatlanish'],
+  [4,'Axloqning tarkibiy tuzilishi?','Axloqiy ong, axloqiy normalar, axloqiy faoliyat va axloqiy munosabatlar'],
+  [4,'Bilish bosqichlari?','Hissiy bilish, aqliy bilish'],
+  [4,'Bilishning dialektik yo\'li?','Hissiy bilishdan aqliy bilishga va undan amaliyotga'],
+  [4,'Borliqning falsafiy mazmuni?','Borliq - obyektiv va subyektiv (ma\'naviy) realliklar birligidir'],
+  [4,'Davlat bu?','Jamiyatni boshqarishni amalga oshiruvchi tuzilma va tashkilotlar majmuasi'],
+  [4,'Dialektika kategoriyalariga xos belgilar?','Xususiylik, obyektivlik, qonuniylik, tarixiylik'],
+  [4,'Dialektika rivojlanish falsafasida qanday o\'rin tutadi?','Rivojlanishning umumiy qonuniyatlarini tushuntiruvchi ta\'limot'],
+  [4,'Dizayn nima?','San\'at turi'],
+  [4,'Dunyoni bilishdan maqsad?','Haqiqatni topish va uni kishilar amaliy faoliyatiga xizmat qildirish'],
+  [4,'Dunyoni sezish bu?','O\'z ini qurshagan dunyoni sezgilar yordamida hissiy idrok etish'],
+  [4,'Estetik his-tuygu nima?','Go\'zallik va xunuklikni, ulug\'vorlik va pastkashlikni, fojiaviylik va kulgililikni idrok etish va baholash qobiliyati'],
+  [4,'Etika fani qanday qadriyatlar tizimiga asoslanadi?','Milliy va umuminsoniy'],
+  [4,'Etika fanidagi adolat tushunchasi?','Har kimga munosib baho berish, haqini to\'liq berishdir'],
+  [4,'Etikada "vijdon" kategoriyasi?','Vijdon - o\'z xulqini muayyan axloqiy normalar nuqtai nazaridan turib baholash, nazorat va tahlil qilish'],
+  [4,'Etnik jamoalarning tarixiy turlari?','Urug\', qabila, elat, millat'],
+  [4,'Falsafaning evristik funktsiyasi?','Tabiat, jamiyat va inson tafakkuri rivojlanishi qonuniyatlarini kashf etish'],
+  [4,'Falsafaning gnoseologik vazifalari?','Olamni bilish uchun umumiy metodlar tizimini yaratish'],
+  [4,'Falsafaning metodologik vazifalari?','O\'rganiladigan ob\'ektni tadqiq etishdagi eng umumiy tamoyillar, usullar, vositalar tizimi'],
+  [4,'Falsafaning paydo bo\'lgan joyi?','Qadimgi Xitoy, Hindiston, Bobil (Vaviloniya)'],
+  [4,'Falsafaning praksiologik funktsiyasi?','Nazariyani amaliyotga joriy etish uslublari va vositalarini aniqlash'],
+  [4,'Falsafaning tarbiyaviy funktsiyasi?','Insonning ma\'naviy barkamolligini ta\'minlash'],
+  [4,'Falsafiy tafakkurning xususiyatlari?','Nazariy obyektivligi, ilmiy asoslanganligi, ijtimoiy qadriyatlarga yo\'naltirilganligi'],
+  [4,'Fan mavjud barcha muammolarni hal etishi mumkin - qaysi falsafiy oqim?','Stsiyentizm'],
+  [4,'Fojialilik va kulgililik kategoriyalari yordamida nima ifodalanadi?','Ijtimoiy hayot hodisalari'],
+  [4,'Gegel ta\'limotining yutug\'i nimada?','"Mutloq ruh" g\'oyasiga asoslangan falsafiy tizimida'],
+  [4,'Gegelь etikasining asosiy tushunchasi?','Iroda erkinligi'],
+  [4,'Harakatning falsafiy asosiy turlari?','Mexanik, fizikaviy, ximiyaviy, biologik, ijtimoiy'],
+  [4,'Hissiy bilish shakllari?','Sezgi, idrok, tasavvur'],
+  [4,'Hozirgi zamon umumbashariy muammolarini hal etish yo\'llari?','Bu muammolarni yuzaga kelish imkoniyatlarini cheklash, jahon fani va texnikasini hamda insoniyat aqlini aniq maqsadga yo\'naltirish'],
+  [4,'I.Kant etikasining tayanch tushunchalari?','Burch va axloqiy imperativlar'],
+  [4,'Ijtimoiy bilishning o\'ziga xos xususiyatlari?','Bilish obyektida, tarixiyligida, ijtimoiy ehtiyojlar, manfaatlar va qadriyatlar bilan bog\'liqligida'],
+  [4,'Ijtimoiy ong darajalari?','Siyosiy ong, huquqiy ong, axloqiy ong, diniy ong, estetik ong'],
+  [4,'Ijtimoiy ongning shakllari?','Siyosiy, huquqiy, axloqiy, diniy, estetik, ekologik'],
+  [4,'Ilmiy bilishning empirik darajasi shakllari tartibi?','Eksperiment, o\'lchash, taqqoslash, kuzatish'],
+  [4,'Ilmiy bilishning nazariy darajasi usullari?','Analiz va sintez; induktsiya va deduktsiya; analogiya; modellashtirish; tarixiylik va mantiqiylik'],
+  [4,'Ilmiy bilishning tub mohiyatini mujassamlashtiruvchi asosiy belgisi?','Mantiq'],
+  [4,'Insoniyatning bundan keyingi taqdirini belgilaydigan sfera?','Noosfera'],
+  [4,'Jadidchilik harakatining mohiyati?','Ma\'rifatni targ\'ib qilish'],
+  [4,'Jamiyat iqtisodiy hayotiga bevosita ta\'sir ko\'rsatuvchi ijtimoiy ong shakli?','Axloqiy ong'],
+  [4,'Jamiyat siyosiy tashkilotining belgilovchi elementi?','Siyosiy partiyalar'],
+  [4,'Jamiyatning moddiy hayoti tushunchasi tarkibi?','Ishlab chiqaruvchi kuchlar, ishlab chiqarish munosabatlari, geografik muhit va aholidan iborat'],
+  [4,'Koinot atomlardan tashkil topgan degan g\'oyani kimlar ilgari surgan?','Levikipp va Demokrit'],
+  [4,'Ma\'naviy madaniyatning ijtimoiy vazifasi?','Odamlarni ma\'rifatli qilish, ma\'naviy go\'zalligiga erishish'],
+  [4,'Mantiq fanining asoschisi?','Aristotel (Arastu)'],
+  [4,'Mantiq fanining o\'rganish ob\'ekti?','Tafakkur'],
+  [4,'Markaziy Osiyoda keng tarqalgan tasavvuf tariqatlarining asoschilari?','Yassaviy, Naqshband, Kubro'],
+  [4,'Metafizika olamni qanday tushuntiradi?','Narsa-hodisalar o\'zgarmaydi, konkret holatda turadi'],
+  [4,'Metodologiya nima?','Nazariy va amaliy faoliyatni tiklash va tashkil etish tamoyillari va usullari'],
+  [4,'Millatning muhim belgilari?','Hududi, davlati, iqtisodiy hayoti, tili, o\'zligini anglash, madaniyatining umumiyligi'],
+  [4,'O\'rta asr falsafasi negizida nima yotadi?','Teosentrizm (xudoga markaziy o\'rin berish)'],
+  [4,'O\'rta Osiyo mutafakkirlaridan kim "O\'tmish avlodlarning yodgorliklari" asarini yozgan?','Beruniy'],
+  [4,'Rivojlanish tushunchasi falsafada qanday talqin qilinadi?','Miqdoriy o\'zgarishlarning sifat o\'zgarishiga o\'tishi sifatida'],
+  [4,'Rivojlanishning falsafiy ma\'nosi?','Har qanday o\'zgarish - rivojlanishdir'],
+  [4,'Tilsiz fikr yuritib bo\'ladimi?','Bo\'lmaydi'],
+  [4,'Tezis bu?','Chinligi asoslanishi lozim bo\'lgan hukm, isbotlanishining markaziy figurasi'],
+  [4,'Argumеntlar bu?','Tezisning chinligini asoslash uchun keltirilgan hukmlar'],
+  [4,'Aqliy bilish shakllari (bosqichlari) tartibi?','Tushuncha, hukm, xulosa'],
+  [4,'Atomistik nazariyaga asos solgan qadimgi yunon faylasuf?','Demokrit'],
+  [4,'Barcha fanlar uchun xos bo\'lgan metodlar?','Umumiy ilmiy metodlar'],
+  [4,'Amaliyot turlarining qaysi biri belgilovchi sanaladi?','Moddiy ishlab chiqarish faoliyati'],
+  [4,'Antropologiya fani nimani o\'rganadi?','Insonni o\'rganadi'],
+  [4,'"Aqlga muvofiq narsalarning barchasi mavjud, mavjud narsalarning barchasi aqlga muvofiq" - bu kim?','Gegel'],
+  [4,'«Falsafa» atamasini birinchi bo\'lib qaysi faylasuf o\'z asarida qo\'llagan?','Pifagor'],
+  [4,'Abu Nasr Forobiyning estetik qarashlari bayon etilgan asari?','"Baxt-saodatga erishuv haqida"'],
+  [4,'Algebra (al-jabr) ilmining asoschisi va Vatani?','Muhammad Xorazmiy, Xorazmda'],
+  [4,'O\'rta Osiyoda "Sharq uyg\'onishi" davri (IX-XII asrlar) yirik namoyondalari?','Farg\'oniy, Forobiy, Ibn Sino, Beruniy'],
+  [4,'Alisher Navoiy asarlari?','"Lisonut tayr", "Mahbubul qulub", "Majolisun nafois"'],
+  [4,'"O\'zgalarni o\'zgartirmoqchi bo\'lgan inson, avvalo, o\'zini o\'zgartirishi lozim" - bu kim?','Suqrot'],
+  [4,'Estetik munosabat bu?','Insonning voqelikka estetik (go\'zallik asosida) munosabati'],
+  [4,'Estetik ongning tarkibiy qismlari?','Estetik his-tuygu, estetik qarash, estetik did, estetik ideal'],
+  [4,'Estetika fani predmeti?','Insonning voqelikka estetik munosabati va san\'atning umumiy qonuniyatlarini o\'rganadi'],
+  [4,'Quyidagilarning qaysi biri dinning funksiyasi emas?','Farovonlik funksiyasi'],
+  [4,'XX asr falsafiy oqimlaridan qaysi biri diniy muammolar bilan shug\'ullanadi?','Neotomizm'],
+];
+
+// ==================== STATE ====================
+let currentTab = -1;
+let searchQuery = '';
+let expandedId = null;
+
+function getFiltered() {
+  const q = searchQuery.trim().toLowerCase();
+  let items = rawData.map((d, i) => ({ cat: d[0], q: d[1], a: d[2], id: i }));
+  if (currentTab >= 0) items = items.filter(x => x.cat === currentTab);
+  if (q) {
+    items = items.filter(x =>
+      x.q.toLowerCase().includes(q) || x.a.toLowerCase().includes(q)
+    );
+  }
+  return items;
+}
+
+function highlight(text, q) {
+  if (!q) return escHtml(text);
+  const escaped = escHtml(text);
+  const escapedQ = escHtml(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return escaped.replace(new RegExp(escapedQ, 'gi'), m => `<span class="highlight">${m}</span>`);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderAll() {
+  const items = getFiltered();
+  document.getElementById('statsLabel').textContent = rawData.length + ' ta savol';
+
+  const q = searchQuery.trim().toLowerCase();
+  const countEl = document.getElementById('resultCount');
+  if (q || currentTab >= 0) {
+    countEl.textContent = items.length + ' ta natija topildi';
+  } else {
+    countEl.textContent = '';
+  }
+
+  const list = document.getElementById('qaList');
+
+  if (items.length === 0) {
+    list.innerHTML = `<div class="no-results">
+      <div class="no-results-icon">🔍</div>
+      <div class="no-results-text">Hech narsa topilmadi</div>
+    </div>`;
+    return;
+  }
+
+  let html = '';
+  let lastCat = null;
+
+  // Group by category when showing all without search
+  const showCatHeaders = currentTab < 0 && !q;
+
+  items.forEach((item, idx) => {
+    if (showCatHeaders && item.cat !== lastCat) {
+      lastCat = item.cat;
+      html += `<div class="cat-header">${categories[item.cat]}</div>`;
+    }
+    const globalIdx = item.id;
+    const isExpanded = expandedId === globalIdx;
+    html += `
+      <div class="qa-card${isExpanded?' expanded':''}" onclick="toggleCard(${globalIdx})">
+        <div class="qa-question">
+          <span class="qa-num">${idx+1}</span>
+          <span class="qa-q-text">${highlight(item.q, q)}</span>
+          <span class="qa-arrow">▼</span>
+        </div>
+        <div class="qa-answer">
+          <div class="answer-label">✓ Javob</div>
+          ${highlight(item.a, q)}
+        </div>
+      </div>`;
+  });
+
+  list.innerHTML = html;
+}
+
+function toggleCard(id) {
+  expandedId = (expandedId === id) ? null : id;
+  renderAll();
+  if (expandedId !== null) {
+    setTimeout(() => {
+      const cards = document.querySelectorAll('.qa-card.expanded');
+      if (cards.length) cards[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+  }
+}
+
+function selectTab(idx, btn) {
+  currentTab = idx;
+  expandedId = null;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+
+function doSearch() {
+  searchQuery = document.getElementById('searchInput').value;
+  expandedId = null;
+  renderAll();
+}
+
+// FAB scroll
+window.addEventListener('scroll', () => {
+  const fab = document.getElementById('fabBtn');
+  if (window.scrollY > 300) fab.classList.add('show');
+  else fab.classList.remove('show');
+});
+
+// ==================== SCREENSHOT PROTECTION ====================
+// Block keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  if (
+    e.key === 'PrintScreen' ||
+    (e.ctrlKey && e.key === 'p') ||
+    (e.ctrlKey && e.shiftKey && e.key === 'i') ||
+    (e.ctrlKey && e.shiftKey && e.key === 'j') ||
+    (e.ctrlKey && e.key === 'u') ||
+    (e.metaKey && e.shiftKey && ['3','4','5'].includes(e.key)) ||
+    e.key === 'F12'
+  ) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }
+});
+
+// Block right click
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+// Block touch screenshot gesture (Android volume+power detection via visibility)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    document.body.style.filter = 'blur(20px)';
+  } else {
+    setTimeout(() => { document.body.style.filter = ''; }, 300);
+  }
+});
+
+// DevTools detection - blur content if opened
+(function devToolsBlock() {
+  let threshold = 160;
+  setInterval(() => {
+    if (
+      window.outerWidth - window.innerWidth > threshold ||
+      window.outerHeight - window.innerHeight > threshold
+    ) {
+      document.body.style.filter = 'blur(20px)';
+    } else {
+      document.body.style.filter = '';
+    }
+  }, 1000);
+})();
+
+// ==================== SERVICE WORKER ====================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW error:', err));
+  });
+}
+</script>
+</body>
+</html>
