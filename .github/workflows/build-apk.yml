@@ -1,10 +1,8 @@
 name: Build APK (Capacitor)
-
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,18 +20,7 @@ jobs:
       - run: npm install
       - run: npx cap add android && npx cap sync android
       - name: Add FLAG_SECURE
-        run: |
-          MAIN=$(find android -name "MainActivity.java" | head -1)
-          python3 - << PYEOF
-path = "$MAIN"
-with open(path) as f: c = f.read()
-if "WindowManager" not in c:
-    c = c.replace("import com.getcapacitor.BridgeActivity;", "import com.getcapacitor.BridgeActivity;\nimport android.view.WindowManager;")
-if "FLAG_SECURE" not in c:
-    c = c.replace("super.onCreate(savedInstanceState);", "super.onCreate(savedInstanceState);\n        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);")
-with open(path, "w") as f: f.write(c)
-print("FLAG_SECURE OK")
-PYEOF
+        run: python3 flag_secure.py
       - name: Build APK
         working-directory: android
         run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
