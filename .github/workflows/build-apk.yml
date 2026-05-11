@@ -57,7 +57,8 @@ jobs:
           python3 << 'PYEOF'
           import os, re
 
-          path = 'android/app/src/main/java/uz/testbase/psixologiya/MainActivity.java'
+          path = next((p for r,d,f in os.walk("android") for p in [os.path.join(r,fi) for fi in f] if p.endswith("MainActivity.java")), None)
+          if not path:
           if not os.path.exists(path):
               print(f"File not found: {path}")
               exit(0)
