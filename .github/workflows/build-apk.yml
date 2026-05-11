@@ -10,114 +10,52 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Kod olish
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Java 17
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      # 3. Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      # 4. Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Install SDK packages
-        run: |
-          sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+        run: sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
 
-      # 5. NPM install
       - name: Install dependencies
         run: npm install
 
-      # 6. Capacitor Android platform
       - name: Add Android platform
         run: |
           npx cap add android
           npx cap sync android
 
-      # 7. App nomi va FLAG_SECURE
-      - name: Customize Android app
+      - name: Add FLAG_SECURE
         run: |
-          # App nomi
-          sed -i 's|app_name\">.*<|app_name\">TestBase<|g' \
-            android/app/src/main/res/values/strings.xml || true
+          MAIN=$(find android -name "MainActivity.java" | head -1)
+          echo "Found: $MAIN"
+          sed -i 's/import com.getcapacitor.BridgeActivity;/import com.getcapacitor.BridgeActivity;\nimport android.view.WindowManager;/' "$MAIN"
+          sed -i 's/super.onCreate(savedInstanceState);/super.onCreate(savedInstanceState);\n        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);/' "$MAIN"
+          echo "FLAG_SECURE added"
+          grep -n "FLAG_SECURE\|WindowManager" "$MAIN"
 
-          # FLAG_SECURE (screenshot blocker)
-          python3 << 'PYEOF'
-          import os, re
-
-          path = next((p for r,d,f in os.walk("android") for p in [os.path.join(r,fi) for fi in f] if p.endswith("MainActivity.java")), None)
-          if not path:
-          if not os.path.exists(path):
-              print(f"File not found: {path}")
-              exit(0)
-
-          with open(path, 'r') as f:
-              content = f.read()
-
-          if 'WindowManager' not in content:
-              content = content.replace(
-                  'import com.getcapacitor.BridgeActivity;',
-                  'import com.getcapacitor.BridgeActivity;\nimport android.view.WindowManager;'
-              )
-
-          if 'FLAG_SECURE' not in content:
-              content = content.replace(
-                  'super.onCreate(savedInstanceState);',
-                  'super.onCreate(savedInstanceState);\n        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);'
-              )
-
-          with open(path, 'w') as f:
-              f.write(content)
-          print("FLAG_SECURE added successfully")
-          PYEOF
-
-      # 8. Gradle build
       - name: Build debug APK
         working-directory: android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
-      # 9. APK artifact
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: TestBase-APK-v${{ github.run_number }}
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 90
-
-      # 10. GitHub Release
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ github.run_number }}
-          name: "TestBase v${{ github.run_number }}"
-          body: |
-            ## 📱 TestBase APK - Offline versiya
-
-            ### O'zgarishlar:
-            - ✅ To'liq offline ishlaydi (internet kerak emas)
-            - ✅ Google Fonts o'chirildi (system fonts ishlatiladi)
-            - ✅ Service Worker - barcha fayllar cache'lanadi
-            - ✅ Screenshot himoyasi (FLAG_SECURE)
-            - 📚 621 ta savol-javob
-
-            ### O'rnatish:
-            1. `app-debug.apk` ni yuklab oling
-            2. Telefon sozlamalarida "Noma'lum manbalar" ni yoqing
-            3. APK ni o'rnating
-          files: android/app/build/outputs/apk/debug/app-debug.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
